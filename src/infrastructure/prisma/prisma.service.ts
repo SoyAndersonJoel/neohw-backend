@@ -1,23 +1,36 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../../generated/prisma/client';
+import { Pool } from 'pg';
 
 @Injectable()
-export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  private readonly client: PrismaClient;
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  private readonly pool: Pool;
+  private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    this.client = new PrismaClient();
-  }
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL is not defined in environment variables');
+    }
 
-  get db(): PrismaClient {
-    return this.client;
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+    super({ adapter });
+    this.pool = pool;
   }
 
   async onModuleInit(): Promise<void> {
-    await this.client.$connect();
+    await this.$connect();
+    this.logger.log('✅ Database connection established');
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.client.$disconnect();
+    await this.$disconnect();
+    await this.pool.end();
+    this.logger.warn('🔌 Database connection closed');
   }
 }

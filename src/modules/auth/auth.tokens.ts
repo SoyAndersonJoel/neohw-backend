@@ -1,0 +1,9 @@
+export const HASH_SERVICE = Symbol('HASH_SERVICE');
+export const REFRESH_TOKEN_REPOSITORY = Symbol('REFRESH_TOKEN_REPOSITORY');
+export const TOKEN_SERVICE = Symbol('TOKEN_SERVICE');
+export const ID_GENERATOR = Symbol('ID_GENERATOR');
+export const AUTH_TOKEN_SERVICE = Symbol('AUTH_TOKEN_SERVICE');
+export const REGISTER_USE_CASE = Symbol('REGISTER_USE_CASE');
+export const LOGIN_USE_CASE = Symbol('LOGIN_USE_CASE');
+export const REFRESH_TOKEN_USE_CASE = Symbol('REFRESH_TOKEN_USE_CASE');
+export const LOGOUT_USE_CASE = Symbol('LOGOUT_USE_CASE');
