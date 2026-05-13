@@ -2,15 +2,16 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Post,
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import type { CookieOptions, Request, Response } from 'express';
-import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -18,11 +19,26 @@ import {
   AccessRequestUser,
   RefreshRequestUser,
 } from './types/auth-request-user';
+import { AuthErrorInterceptor } from './auth-error.interceptor';
+import { 
+  LOGIN_USE_CASE, 
+  REGISTER_USE_CASE, 
+  REFRESH_TOKEN_USE_CASE, 
+  LOGOUT_USE_CASE 
+} from '../auth.tokens';
+import { LoginUseCase } from '../application/use-cases/login.use-case';
+import { RegisterUseCase } from '../application/use-cases/register.use-case';
+import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-case';
+import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 
 @Controller('auth')
+@UseInterceptors(AuthErrorInterceptor)
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    @Inject(REGISTER_USE_CASE) private readonly registerUseCase: RegisterUseCase,
+    @Inject(LOGIN_USE_CASE) private readonly loginUseCase: LoginUseCase,
+    @Inject(REFRESH_TOKEN_USE_CASE) private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    @Inject(LOGOUT_USE_CASE) private readonly logoutUseCase: LogoutUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -31,7 +47,7 @@ export class AuthController {
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
-    const result = await this.authService.register(dto);
+    const result = await this.registerUseCase.execute(dto);
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, user: result.user };
   }
@@ -41,7 +57,7 @@ export class AuthController {
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
-    const result = await this.authService.login(dto);
+    const result = await this.loginUseCase.execute(dto);
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, user: result.user };
   }
@@ -52,7 +68,11 @@ export class AuthController {
     @Req() req: Request & { user: RefreshRequestUser },
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
-    const result = await this.authService.refresh(req.user);
+    const result = await this.refreshTokenUseCase.execute({
+      userId: req.user.userId,
+      tokenId: req.user.tokenId,
+      refreshToken: req.user.refreshToken,
+    });
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, user: result.user };
   }
@@ -63,7 +83,9 @@ export class AuthController {
     @Req() req: Request & { user: RefreshRequestUser },
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ success: boolean }> {
-    await this.authService.logout(req.user);
+    await this.logoutUseCase.execute({
+      tokenId: req.user.tokenId,
+    });
     this.clearRefreshCookie(res);
     return { success: true };
   }

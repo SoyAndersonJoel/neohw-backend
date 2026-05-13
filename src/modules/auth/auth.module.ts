@@ -24,7 +24,6 @@ import {
   TOKEN_SERVICE,
 } from './auth.tokens';
 import { AuthController } from './infrastructure/auth.controller';
-import { AuthService } from './infrastructure/auth.service';
 import { RolesGuard } from './infrastructure/guards/roles.guard';
 import { PrismaRefreshTokenRepository } from './infrastructure/repositories/prisma-refresh-token.repository';
 import { JwtRefreshStrategy } from './infrastructure/strategies/jwt-refresh.strategy';
@@ -114,7 +113,6 @@ const logoutUseCaseProvider = {
   ],
   controllers: [AuthController],
   providers: [
-    AuthService,
     JwtStrategy,
     JwtRefreshStrategy,
     RolesGuard,
@@ -131,6 +129,6 @@ const logoutUseCaseProvider = {
     },
     { provide: ID_GENERATOR, useClass: CryptoIdGenerator },
   ],
-  exports: [AuthService, RolesGuard],
+  exports: [RolesGuard],
 })
 export class AuthModule {}
