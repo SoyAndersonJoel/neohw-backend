@@ -25,6 +25,11 @@ export class LoginUseCase {
       throw new AuthError('USER_DISABLED');
     }
 
+    if (!user.passwordHash) {
+      // El usuario se registró con Google/Facebook y no tiene contraseña local
+      throw new AuthError('INVALID_CREDENTIALS');
+    }
+
     const valid = await this.hashService.verify(
       user.passwordHash,
       input.password,

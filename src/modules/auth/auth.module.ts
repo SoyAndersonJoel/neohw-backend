@@ -9,6 +9,7 @@ import { LoginUseCase } from './application/use-cases/login.use-case';
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
 import { RegisterUseCase } from './application/use-cases/register.use-case';
+import { SocialLoginUseCase } from './application/use-cases/social-login.use-case';
 import { CreateUserUseCase } from '../users/application/use-cases/create-user.use-case';
 import { FindUserByEmailUseCase } from '../users/application/use-cases/find-user-by-email.use-case';
 import { FindUserByIdUseCase } from '../users/application/use-cases/find-user-by-id.use-case';
@@ -22,6 +23,9 @@ import {
   REFRESH_TOKEN_USE_CASE,
   REGISTER_USE_CASE,
   TOKEN_SERVICE,
+  SOCIAL_LOGIN_USE_CASE,
+  GOOGLE_AUTH_SERVICE,
+  FACEBOOK_AUTH_SERVICE,
 } from './auth.tokens';
 import { AuthController } from './infrastructure/auth.controller';
 import { RolesGuard } from './infrastructure/guards/roles.guard';
@@ -35,6 +39,9 @@ import type { HashService } from './domain/interfaces/hash.service';
 import type { IdGenerator } from './domain/interfaces/id-generator';
 import type { RefreshTokenRepository } from './domain/interfaces/refresh-token.repository';
 import type { TokenService } from './domain/interfaces/token.service';
+import { GoogleAuthService } from './infrastructure/services/google-auth.service';
+import { FacebookAuthService } from './infrastructure/services/facebook-auth.service';
+import type { ISocialAuthService } from './domain/interfaces/social-auth.service.interface';
 
 const authTokenServiceProvider = {
   provide: AUTH_TOKEN_SERVICE,
@@ -103,6 +110,31 @@ const logoutUseCaseProvider = {
   inject: [AUTH_TOKEN_SERVICE],
 };
 
+const socialLoginUseCaseProvider = {
+  provide: SOCIAL_LOGIN_USE_CASE,
+  useFactory: (
+    findUserByEmailUseCase: FindUserByEmailUseCase,
+    createUserUseCase: CreateUserUseCase,
+    authTokenService: AuthTokenService,
+    googleAuthService: ISocialAuthService,
+    facebookAuthService: ISocialAuthService,
+  ): SocialLoginUseCase =>
+    new SocialLoginUseCase(
+      findUserByEmailUseCase,
+      createUserUseCase,
+      authTokenService,
+      googleAuthService,
+      facebookAuthService,
+    ),
+  inject: [
+    FindUserByEmailUseCase,
+    CreateUserUseCase,
+    AUTH_TOKEN_SERVICE,
+    GOOGLE_AUTH_SERVICE,
+    FACEBOOK_AUTH_SERVICE,
+  ],
+};
+
 @Module({
   imports: [
     ConfigModule,
@@ -121,6 +153,7 @@ const logoutUseCaseProvider = {
     loginUseCaseProvider,
     refreshTokenUseCaseProvider,
     logoutUseCaseProvider,
+    socialLoginUseCaseProvider,
     { provide: HASH_SERVICE, useClass: Argon2HashService },
     { provide: TOKEN_SERVICE, useClass: JwtTokenService },
     {
@@ -128,6 +161,8 @@ const logoutUseCaseProvider = {
       useClass: PrismaRefreshTokenRepository,
     },
     { provide: ID_GENERATOR, useClass: CryptoIdGenerator },
+    { provide: GOOGLE_AUTH_SERVICE, useClass: GoogleAuthService },
+    { provide: FACEBOOK_AUTH_SERVICE, useClass: FacebookAuthService },
   ],
   exports: [RolesGuard],
 })

@@ -3,6 +3,7 @@ import { Prisma, Role as PrismaRole } from '../../../../generated/prisma/client'
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { User } from '../../domain/entities/user.entity';
 import { Role } from '../../domain/enums/role.enum';
+import { AuthProvider } from '../../domain/enums/auth-provider.enum';
 import {
   CreateUserParams,
   UserRepository,
@@ -12,6 +13,8 @@ const userSelect = {
   id: true,
   email: true,
   passwordHash: true,
+  provider: true,
+  providerId: true,
   role: true,
   isActive: true,
   createdAt: true,
@@ -45,6 +48,8 @@ export class PrismaUserRepository implements UserRepository {
       data: {
         email: data.email,
         passwordHash: data.passwordHash,
+        provider: data.provider,
+        providerId: data.providerId,
         role: data.role as PrismaRole,
       },
       select: userSelect,
@@ -58,6 +63,8 @@ export class PrismaUserRepository implements UserRepository {
       id: user.id,
       email: user.email,
       passwordHash: user.passwordHash,
+      provider: user.provider as AuthProvider,
+      providerId: user.providerId,
       role: user.role as Role,
       isActive: user.isActive,
       createdAt: user.createdAt,

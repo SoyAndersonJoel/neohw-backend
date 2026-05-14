@@ -7,3 +7,6 @@ export const REGISTER_USE_CASE = Symbol('REGISTER_USE_CASE');
 export const LOGIN_USE_CASE = Symbol('LOGIN_USE_CASE');
 export const REFRESH_TOKEN_USE_CASE = Symbol('REFRESH_TOKEN_USE_CASE');
 export const LOGOUT_USE_CASE = Symbol('LOGOUT_USE_CASE');
+export const SOCIAL_LOGIN_USE_CASE = Symbol('SOCIAL_LOGIN_USE_CASE');
+export const GOOGLE_AUTH_SERVICE = Symbol('GOOGLE_AUTH_SERVICE');
+export const FACEBOOK_AUTH_SERVICE = Symbol('FACEBOOK_AUTH_SERVICE');

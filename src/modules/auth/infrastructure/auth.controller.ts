@@ -15,6 +15,8 @@ import type { CookieOptions, Request, Response } from 'express';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { SocialLoginDto } from './dto/social-login.dto';
+import { AuthProvider } from '../../users/domain/enums/auth-provider.enum';
 import {
   AccessRequestUser,
   RefreshRequestUser,
@@ -24,12 +26,14 @@ import {
   LOGIN_USE_CASE, 
   REGISTER_USE_CASE, 
   REFRESH_TOKEN_USE_CASE, 
-  LOGOUT_USE_CASE 
+  LOGOUT_USE_CASE,
+  SOCIAL_LOGIN_USE_CASE
 } from '../auth.tokens';
 import { LoginUseCase } from '../application/use-cases/login.use-case';
 import { RegisterUseCase } from '../application/use-cases/register.use-case';
 import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../application/use-cases/logout.use-case';
+import { SocialLoginUseCase } from '../application/use-cases/social-login.use-case';
 
 @Controller('auth')
 @UseInterceptors(AuthErrorInterceptor)
@@ -39,6 +43,7 @@ export class AuthController {
     @Inject(LOGIN_USE_CASE) private readonly loginUseCase: LoginUseCase,
     @Inject(REFRESH_TOKEN_USE_CASE) private readonly refreshTokenUseCase: RefreshTokenUseCase,
     @Inject(LOGOUT_USE_CASE) private readonly logoutUseCase: LogoutUseCase,
+    @Inject(SOCIAL_LOGIN_USE_CASE) private readonly socialLoginUseCase: SocialLoginUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -58,6 +63,32 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
     const result = await this.loginUseCase.execute(dto);
+    this.setRefreshCookie(res, result.refreshToken);
+    return { accessToken: result.accessToken, user: result.user };
+  }
+
+  @Post('social/google')
+  async loginWithGoogle(
+    @Body() dto: SocialLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
+    const result = await this.socialLoginUseCase.execute({
+      token: dto.token,
+      provider: AuthProvider.GOOGLE,
+    });
+    this.setRefreshCookie(res, result.refreshToken);
+    return { accessToken: result.accessToken, user: result.user };
+  }
+
+  @Post('social/facebook')
+  async loginWithFacebook(
+    @Body() dto: SocialLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
+    const result = await this.socialLoginUseCase.execute({
+      token: dto.token,
+      provider: AuthProvider.FACEBOOK,
+    });
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, user: result.user };
   }

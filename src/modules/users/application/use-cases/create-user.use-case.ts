@@ -19,7 +19,9 @@ export class CreateUserUseCase {
 
     return this.userRepository.create({
       email,
-      passwordHash: input.passwordHash,
+      passwordHash: input.passwordHash ?? null,
+      provider: input.provider,
+      providerId: input.providerId ?? null,
       role: input.role,
     });
   }

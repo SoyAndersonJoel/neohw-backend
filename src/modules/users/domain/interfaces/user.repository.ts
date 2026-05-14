@@ -1,9 +1,12 @@
 import { User } from '../entities/user.entity';
 import { Role } from '../enums/role.enum';
+import { AuthProvider } from '../enums/auth-provider.enum';
 
 export type CreateUserParams = {
   email: string;
-  passwordHash: string;
+  passwordHash?: string | null;
+  provider?: AuthProvider;
+  providerId?: string | null;
   role: Role;
 };
 
