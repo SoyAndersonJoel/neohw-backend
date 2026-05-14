@@ -14,4 +14,5 @@ export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
   create(data: CreateUserParams): Promise<User>;
+  updateRole(id: string, role: Role): Promise<User>;
 }

@@ -1,1 +1,2 @@
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
+export const CHANGE_USER_ROLE_USE_CASE = Symbol('CHANGE_USER_ROLE_USE_CASE');

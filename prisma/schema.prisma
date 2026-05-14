@@ -12,6 +12,7 @@ enum Role {
   USER
   ADMIN
   SELLER
+  SUPER_ADMIN
 }
 
 enum AuthProvider {
