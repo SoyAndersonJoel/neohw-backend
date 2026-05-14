@@ -4,7 +4,11 @@ import { Role } from '../../users/domain/enums/role.enum';
 export type PublicUser = {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
   role: Role;
+  isActive: boolean;
 };
 
 export type AuthResult = {
@@ -16,5 +20,9 @@ export type AuthResult = {
 export const toPublicUser = (user: User): PublicUser => ({
   id: user.id,
   email: user.email,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  phone: user.phone,
   role: user.role,
+  isActive: user.isActive,
 });

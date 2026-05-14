@@ -24,6 +24,9 @@ enum AuthProvider {
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
+  firstName    String?
+  lastName     String?
+  phone        String?
   passwordHash String?
   provider     AuthProvider   @default(LOCAL)
   providerId   String?
