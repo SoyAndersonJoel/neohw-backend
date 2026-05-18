@@ -76,33 +76,125 @@ async function main(): Promise<void> {
       create: { name: 'Memorias RAM', slug: 'memorias-ram', parentId: catComp.id },
     });
 
-    // Crear Atributos
-    const attrSocket = await prisma.attribute.upsert({
-      where: { slug: 'socket' },
+    const catGpu = await prisma.category.upsert({
+      where: { slug: 'tarjetas-graficas' },
       update: {},
+      create: { name: 'Tarjetas Gráficas', slug: 'tarjetas-graficas', parentId: catComp.id },
+    });
+
+    const catStorage = await prisma.category.upsert({
+      where: { slug: 'almacenamiento' },
+      update: {},
+      create: { name: 'Almacenamiento', slug: 'almacenamiento', parentId: catComp.id },
+    });
+
+    const catPsu = await prisma.category.upsert({
+      where: { slug: 'fuentes-de-poder' },
+      update: {},
+      create: { name: 'Fuentes de Poder', slug: 'fuentes-de-poder', parentId: catComp.id },
+    });
+
+    const catCase = await prisma.category.upsert({
+      where: { slug: 'gabinetes' },
+      update: {},
+      create: { name: 'Gabinetes', slug: 'gabinetes', parentId: catComp.id },
+    });
+
+    // Crear Atributos - Core
+    const attrSocket = await prisma.attribute.upsert({
+      where: { slug: 'socket' }, update: {},
       create: { name: 'Socket', slug: 'socket', dataType: 'TEXT', isFilterable: true, isRequired: true },
     });
 
     const attrRamType = await prisma.attribute.upsert({
-      where: { slug: 'tipo-de-ram' },
-      update: {},
+      where: { slug: 'tipo-de-ram' }, update: {},
       create: { name: 'Tipo de RAM', slug: 'tipo-de-ram', dataType: 'TEXT', isFilterable: true, isRequired: true },
     });
 
     const attrFormFactor = await prisma.attribute.upsert({
-      where: { slug: 'formato' },
-      update: {},
+      where: { slug: 'formato' }, update: {},
       create: { name: 'Formato', slug: 'formato', dataType: 'TEXT', isFilterable: true, isRequired: true },
+    });
+
+    const attrTdp = await prisma.attribute.upsert({
+      where: { slug: 'tdp' }, update: {},
+      create: { name: 'TDP', slug: 'tdp', dataType: 'NUMBER', unit: 'W', isFilterable: true, isRequired: true },
+    });
+
+    // Crear Atributos - CPU específicos
+    const attrCores = await prisma.attribute.upsert({
+      where: { slug: 'nucleos' }, update: {},
+      create: { name: 'Núcleos', slug: 'nucleos', dataType: 'NUMBER', isFilterable: true, isRequired: true },
+    });
+
+    // Crear Atributos - GPU específicos
+    const attrVram = await prisma.attribute.upsert({
+      where: { slug: 'vram' }, update: {},
+      create: { name: 'VRAM', slug: 'vram', dataType: 'NUMBER', unit: 'GB', isFilterable: true, isRequired: true },
+    });
+
+    const attrRecommendedPsu = await prisma.attribute.upsert({
+      where: { slug: 'psu-recomendada' }, update: {},
+      create: { name: 'PSU Recomendada', slug: 'psu-recomendada', dataType: 'NUMBER', unit: 'W', isFilterable: true, isRequired: true },
+    });
+
+    // Crear Atributos - RAM específicos
+    const attrCapacity = await prisma.attribute.upsert({
+      where: { slug: 'capacidad' }, update: {},
+      create: { name: 'Capacidad', slug: 'capacidad', dataType: 'NUMBER', unit: 'GB', isFilterable: true, isRequired: true },
+    });
+
+    // Crear Atributos - Storage
+    const attrStorageType = await prisma.attribute.upsert({
+      where: { slug: 'tipo-de-almacenamiento' }, update: {},
+      create: { name: 'Tipo de Almacenamiento', slug: 'tipo-de-almacenamiento', dataType: 'TEXT', isFilterable: true, isRequired: true },
+    });
+
+    // Crear Atributos - PSU
+    const attrWattage = await prisma.attribute.upsert({
+      where: { slug: 'potencia' }, update: {},
+      create: { name: 'Potencia', slug: 'potencia', dataType: 'NUMBER', unit: 'W', isFilterable: true, isRequired: true },
+    });
+
+    const attrCertification = await prisma.attribute.upsert({
+      where: { slug: 'certificacion' }, update: {},
+      create: { name: 'Certificación', slug: 'certificacion', dataType: 'TEXT', isFilterable: true, isRequired: false },
+    });
+
+    // Crear Atributos - Case
+    const attrMaxGpuLength = await prisma.attribute.upsert({
+      where: { slug: 'largo-maximo-gpu' }, update: {},
+      create: { name: 'Largo Máximo GPU', slug: 'largo-maximo-gpu', dataType: 'NUMBER', unit: 'mm', isFilterable: true, isRequired: true },
     });
 
     // Asignar Atributos a Categorías
     const categoryAttributes = [
+      // CPU
       { categoryId: catCpu.id, attributeId: attrSocket.id },
       { categoryId: catCpu.id, attributeId: attrRamType.id },
+      { categoryId: catCpu.id, attributeId: attrTdp.id },
+      { categoryId: catCpu.id, attributeId: attrCores.id },
+      // Motherboard
       { categoryId: catMobo.id, attributeId: attrSocket.id },
       { categoryId: catMobo.id, attributeId: attrRamType.id },
       { categoryId: catMobo.id, attributeId: attrFormFactor.id },
+      // RAM
       { categoryId: catRam.id, attributeId: attrRamType.id },
+      { categoryId: catRam.id, attributeId: attrCapacity.id },
+      // GPU
+      { categoryId: catGpu.id, attributeId: attrVram.id },
+      { categoryId: catGpu.id, attributeId: attrTdp.id },
+      { categoryId: catGpu.id, attributeId: attrRecommendedPsu.id },
+      // Storage
+      { categoryId: catStorage.id, attributeId: attrStorageType.id },
+      { categoryId: catStorage.id, attributeId: attrCapacity.id },
+      { categoryId: catStorage.id, attributeId: attrFormFactor.id },
+      // PSU
+      { categoryId: catPsu.id, attributeId: attrWattage.id },
+      { categoryId: catPsu.id, attributeId: attrCertification.id },
+      // Case
+      { categoryId: catCase.id, attributeId: attrFormFactor.id }, // Supported form factors (e.g., ATX, Micro-ATX)
+      { categoryId: catCase.id, attributeId: attrMaxGpuLength.id },
     ];
 
     for (const ca of categoryAttributes) {
