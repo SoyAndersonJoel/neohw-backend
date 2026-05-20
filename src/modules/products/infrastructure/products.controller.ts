@@ -59,7 +59,7 @@ export class ProductsController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   async create(
     @Body() dto: CreateProductDto,
     @Req() req: Request & { user: AccessRequestUser },
@@ -107,7 +107,7 @@ export class ProductsController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateProductDto,
