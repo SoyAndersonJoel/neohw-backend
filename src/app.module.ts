@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
@@ -10,7 +11,11 @@ import { AttributesModule } from './modules/attributes/attributes.module';
 import { ProductsModule } from './modules/products/products.module';
 import { ProductAttributesModule } from './modules/product-attributes/product-attributes.module';
 import { CompatibilityModule } from './modules/compatibility/compatibility.module';
+import { McpModule } from './modules/mcp/mcp.module';
+import { AiModule } from './modules/ai/ai.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { OrdersModule } from './modules/orders/orders.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -19,6 +24,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
       load: [configuration],
       envFilePath: '.env',
     }),
+    EventEmitterModule.forRoot(),
     PrismaModule,
     AuthModule,
     CategoriesModule,
@@ -26,6 +32,10 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
     ProductsModule,
     ProductAttributesModule,
     CompatibilityModule,
+    McpModule,
+    AiModule,
+    OrdersModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
