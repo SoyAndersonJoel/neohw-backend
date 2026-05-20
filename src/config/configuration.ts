@@ -18,10 +18,18 @@ export default () => {
     );
   }
 
+  const groqApiKey = process.env.GROQ_API_KEY;
+  if (!groqApiKey) {
+    throw new Error('GROQ_API_KEY is not defined in environment variables');
+  }
+
   return {
     port: parseInt(process.env.PORT || '3000', 10),
     database: {
       url: databaseUrl,
+    },
+    ai: {
+      groqApiKey,
     },
     auth: {
       jwt: {
