@@ -65,6 +65,6 @@ const deleteProductUseCaseProvider = {
     deleteProductUseCaseProvider,
     RolesGuard,
   ],
-  exports: [PRODUCT_REPOSITORY, FIND_PRODUCT_BY_ID_USE_CASE],
+  exports: [PRODUCT_REPOSITORY, FIND_PRODUCT_BY_ID_USE_CASE, FIND_ALL_PRODUCTS_USE_CASE],
 })
 export class ProductsModule {}

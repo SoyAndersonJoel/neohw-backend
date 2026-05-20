@@ -66,5 +66,12 @@ const deleteRuleUseCaseProvider = {
     deleteRuleUseCaseProvider,
     RolesGuard,
   ],
+  exports: [
+    CHECK_COMPATIBILITY_USE_CASE,
+    FIND_ALL_RULES_USE_CASE,
+    COMPATIBILITY_REPOSITORY,
+    PRODUCT_ATTRIBUTES_FETCHER,
+    COMPATIBILITY_ENGINE,
+  ],
 })
 export class CompatibilityModule {}
