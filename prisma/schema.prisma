@@ -36,6 +36,7 @@ model User {
   updatedAt    DateTime       @updatedAt
   refreshTokens RefreshToken[]
   products      Product[]
+  orders        Order[]
 }
 
 model RefreshToken {
@@ -134,6 +135,7 @@ model Product {
   category   Category           @relation(fields: [categoryId], references: [id])
   seller     User               @relation(fields: [sellerId], references: [id])
   attributes ProductAttribute[]
+  orderItems OrderItem[]
 
   @@index([categoryId])
   @@index([sellerId])
@@ -166,4 +168,73 @@ model CompatibilityRule {
 
   sourceAttribute Attribute @relation("SourceAttr", fields: [sourceAttributeId], references: [id])
   targetAttribute Attribute @relation("TargetAttr", fields: [targetAttributeId], references: [id])
+}
+
+// ─── Orders & Payments Models ────────────────────────────────────
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+  MOCK
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  status          OrderStatus @default(PENDING_PAYMENT)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  shippingAddress Json        // JSON flexible para guardar lat/lng, calle, ciudad, etc.
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String
+  quantity    Int
+  priceAtTime Decimal  @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Payment {
+  id                    String          @id @default(uuid())
+  orderId               String
+  provider              PaymentProvider
+  providerTransactionId String?         @unique // ID devuelto por Stripe/PayPal (Crítico para Idempotencia)
+  status                PaymentStatus   @default(PENDING)
+  amount                Decimal         @db.Decimal(10, 2)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([providerTransactionId])
 }
