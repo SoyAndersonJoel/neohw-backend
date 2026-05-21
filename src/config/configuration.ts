@@ -19,8 +19,10 @@ export default () => {
   }
 
   const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey) {
-    throw new Error('GROQ_API_KEY is not defined in environment variables');
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  if (!groqApiKey && !geminiApiKey) {
+    throw new Error('No AI API keys are defined in environment variables');
   }
 
   return {
@@ -30,6 +32,7 @@ export default () => {
     },
     ai: {
       groqApiKey,
+      geminiApiKey,
     },
     auth: {
       jwt: {
