@@ -7,19 +7,57 @@ export class AiController {
   constructor(private readonly aiAgentService: AiAgentService) {}
 
   @Post('chat')
-  async chat(@Body('messages') messages: Array<{role: string, content: string}>, @Res() res: Response) {
-    const result = await this.aiAgentService.chat(messages);
-    
-    // Configuramos la cabecera para texto en streaming continuo
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Transfer-Encoding', 'chunked');
-    
-    // Vercel AI SDK expone 'textStream' que es un iterador asíncrono.
-    // Iteramos sobre él y escribimos cada pedacito nativamente en la respuesta de Express.
-    for await (const chunk of result.textStream) {
-      res.write(chunk);
+  async chat(
+    @Body('messages') messages: Array<{ role: string; content: string }>,
+    @Body('prompt') prompt: string,
+    @Res() res: Response,
+  ) {
+    try {
+      let messagesArray = messages;
+
+      // Si el cliente envía 'prompt' en lugar de 'messages', lo adaptamos al formato esperado
+      if (!messagesArray && prompt) {
+        messagesArray = [{ role: 'user', content: prompt }];
+      }
+
+      // Validación de entrada
+      if (!messagesArray || !Array.isArray(messagesArray)) {
+        return res.status(400).json({
+          statusCode: 400,
+          message: 'Debe proporcionar un array de "messages" o un campo "prompt" de tipo string.',
+          error: 'Bad Request',
+        });
+      }
+
+      const result = await this.aiAgentService.chat(messagesArray);
+
+      // Configuramos la cabecera para texto en streaming continuo
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Transfer-Encoding', 'chunked');
+
+      // Iteramos sobre el flujo completo (fullStream) que incluye las llamadas a herramientas.
+      // Así evitamos que la conexión se cierre prematuramente si la IA ejecuta una herramienta en silencio.
+      for await (const part of result.fullStream) {
+        if (part.type === 'text-delta') {
+          res.write(part.textDelta);
+        }
+      }
+
+      res.end();
+    } catch (error: any) {
+      // Si la cabecera ya se envió, no podemos responder con JSON, solo cerramos el stream.
+      if (res.headersSent) {
+        console.error('Error durante el streaming de la IA:', error);
+        res.end();
+      } else {
+        console.error('Error al iniciar el chat con la IA:', error);
+        res.status(500).json({
+          statusCode: 500,
+          message: 'Error al procesar la solicitud con la IA.',
+          details: error.message || error,
+        });
+      }
     }
-    
-    res.end();
   }
 }
+
