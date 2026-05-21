@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { streamText, tool } from 'ai';
-import { createGroq } from '@ai-sdk/groq';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 
 import {
@@ -15,7 +15,7 @@ import type { FindAllProductsUseCase } from '../../../products/application/use-c
 
 @Injectable()
 export class AiAgentService {
-  private groq: ReturnType<typeof createGroq>;
+  private google: ReturnType<typeof createGoogleGenerativeAI>;
 
   constructor(
     private readonly configService: ConfigService,
@@ -26,65 +26,104 @@ export class AiAgentService {
     @Inject(FIND_ALL_PRODUCTS_USE_CASE)
     private readonly findAllProductsUseCase: FindAllProductsUseCase,
   ) {
-    const apiKey = this.configService.get<string>('ai.groqApiKey');
+    const apiKey = this.configService.get<string>('ai.geminiApiKey');
     if (!apiKey) {
-      throw new Error('GROQ_API_KEY is missing');
+      throw new Error('GEMINI_API_KEY is missing');
     }
     
-    // Inicializar el proveedor de Groq
-    this.groq = createGroq({
+    // Inicializar el proveedor de Google (Gemini)
+    this.google = createGoogleGenerativeAI({
       apiKey,
     });
   }
 
   async chat(messages: any[]): Promise<any> {
-    // Usamos Llama-3.3 70B vía Groq por ser ultra rápido y soportar tool calling perfectamente
-    const model = this.groq('llama-3.3-70b-versatile');
+    // Usamos gemini-2.5-flash por ser excelente para uso de herramientas y de bajísima latencia
+    const model = this.google('gemini-2.5-flash');
 
     const systemPrompt = `
-      Eres el Arquitecto de Hardware y Asistente Experto de NeoHW, una tienda de componentes de PC.
-      Tu objetivo es ayudar a los clientes a armar computadoras, recomendar piezas y verificar que todo sea compatible.
+      Eres Neo, el Arquitecto Experto de Hardware de NeoHW, una tienda premium de componentes de PC en Ecuador.
+      Tu objetivo es brindar la mejor asesoría técnica para armar computadoras, garantizando compatibilidad y guiando la compra.
       
-      Reglas cruciales:
-      1. NUNCA inventes o asumas compatibilidades. SIEMPRE usa la herramienta 'check_compatibility'.
-      2. NUNCA inventes productos o precios. SIEMPRE usa la herramienta 'search_products' para ver qué hay en inventario.
-      3. Si el cliente pide armar una PC desde cero, busca primero las piezas clave (CPU, Motherboard), verifica su compatibilidad, y luego recomiéndalas.
-      4. Sé amable, técnico pero fácil de entender, y usa emojis para hacer la lectura agradable.
-      5. Si un producto no está en el inventario al buscarlo, dile al cliente que por el momento no contamos con él.
+      Reglas de Personalidad y Ventas (CRÍTICAS):
+      1. Tono: Sé muy amable, entusiasta, empático y usa emojis para darle vida a la conversación.
+      2. Formato Visual: Usa siempre Markdown. Resalta en **negrita** los nombres de los productos clave y usa listas con viñetas (-) cuando presentes opciones o presupuestos.
+      3. Up-Selling (Recomendaciones Proactivas): Si el cliente elige un Procesador de gama media/alta, pregúntale sutilmente si ya cuenta con una buena placa madre o refrigeración adecuada. Ayúdale a armar el ecosistema completo.
+      4. Cierre Conversacional: Termina SIEMPRE tus respuestas con una pregunta breve que invite al cliente a continuar (ej: "¿Te gustaría que revise si esto es compatible con tu fuente de poder?" o "¿Cuál es tu presupuesto estimado para este armado?").
+      
+      Reglas Técnicas y de Herramientas:
+      1. NUNCA inventes o asumas compatibilidades. SIEMPRE usa la herramienta 'checkCompatibility' cuando el cliente quiera combinar dos piezas.
+      2. ESTÁ ESTRICTAMENTE PROHIBIDO mencionar nombres, modelos o características sin haber ejecutado ANTES la herramienta 'searchProducts'.
+      CRÍTICO: NO digas "Voy a buscar", NO pidas permiso para buscar, y NO uses frases de relleno antes de buscar. ¡SIMPLEMENTE EJECUTA LA HERRAMIENTA EN SILENCIO DE INMEDIATO! Redacta tu respuesta SOLO DESPUÉS de ver los resultados de la base de datos de NeoHW.
+      3. Si la herramienta 'searchProducts' devuelve que un producto tiene bajo stock, menciónale al cliente que quedan pocas unidades para generar sentido de oportunidad.
     `;
 
     return streamText({
       model,
       system: systemPrompt,
       messages: messages as any,
+      maxSteps: 5, // Permitir ciclos múltiples de razonamiento y uso de herramientas
       tools: {
         searchProducts: tool({
           description: 'Busca productos de hardware en el catálogo de NeoHW.',
           parameters: z.object({
-            category: z.string().optional().describe('Slug de categoría (ej: "procesadores")'),
-            brand: z.string().optional().describe('Marca (ej: "Intel", "AMD")'),
-            search: z.string().optional().describe('Texto libre para buscar'),
+            category: z.string().optional().describe('Slug de categoría (ej: "procesadores", "placas-madres", "memorias-ram")'),
+            categoria: z.string().optional().describe('Alias de category en español'),
+            brand: z.string().optional().describe('Marca (ej: "Intel", "AMD", "ASUS", "NVIDIA")'),
+            marca: z.string().optional().describe('Alias de brand en español'),
+            manufacturer: z.string().optional().describe('Alias de brand in English'),
+            search: z.string().optional().describe('Texto libre para buscar por nombre o descripción (ej: "Ryzen 5 5600X")'),
+            model: z.string().optional().describe('Alias de search in English'),
+            modelo: z.string().optional().describe('Alias de search en español'),
+            tipo: z.string().optional().describe('Tipo de componente'),
+            type: z.string().optional().describe('Type of component'),
+            ligne: z.string().optional().describe('Línea o gama del componente (ej: "Ryzen")'),
+            series: z.string().optional().describe('Serie del componente (ej: "5000")'),
+            presupuesto: z.union([z.string(), z.number()]).optional().describe('Presupuesto máximo'),
+            budget: z.union([z.string(), z.number()]).optional().describe('Maximum budget'),
             limit: z.number().optional().describe('Límite de resultados (máx 20)'),
           }),
           execute: async (args: any) => {
-            const { category, brand, search, limit } = args;
+            console.log('⚡ [AI TOOL CALLED] searchProducts ejecutado con argumentos:', args);
+            const category = args.category || args.categoria;
+            const brand = args.brand || args.marca || args.manufacturer;
+            
+            // Fusión de términos de búsqueda para no perder precisión en el catálogo
+            const searchParts = [
+              args.search,
+              args.model,
+              args.modelo,
+              args.ligne,
+              args.series,
+              args.tipo,
+              args.type
+            ].filter(Boolean);
+            const search = searchParts.length > 0 ? searchParts.join(' ') : undefined;
+            const limit = args.limit ?? 10;
+            
             const result = await this.findAllProductsUseCase.execute({
               filters: { category, brand, search, isActive: true },
               page: 1,
-              limit: limit ?? 10,
+              limit,
               sort: 'price',
               order: 'asc',
             });
             
-            return result.data.map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              brand: p.brand,
-              price: p.price,
-              stock: p.stock,
-              category: p.category.name,
-              attributes: p.attributes.map((a: any) => `${a.name}: ${a.value}${a.unit ? ` ${a.unit}` : ''}`)
-            }));
+            return result.data.map((p: any) => {
+              let stockStatus = 'En stock';
+              if (p.stock <= 0) stockStatus = 'AGOTADO';
+              else if (p.stock <= 3) stockStatus = `¡Últimas ${p.stock} unidades!`;
+
+              return {
+                id: p.id,
+                name: p.name,
+                brand: p.brand,
+                price: p.price,
+                stockAvailability: stockStatus,
+                category: p.category.name,
+                attributes: p.attributes.map((a: any) => `${a.name}: ${a.value}${a.unit ? ` ${a.unit}` : ''}`)
+              };
+            });
           },
         } as any),
 
@@ -104,7 +143,7 @@ export class AiAgentService {
                 )
               };
             } catch (error) {
-              return { error: error instanceof Error ? error.message : 'Error de compatibilidad' };
+              return { error: 'Error interno: Dile amablemente al cliente que no pudiste verificar la compatibilidad en este momento, y pídele que sea más específico con el modelo o nombre exacto del producto.' };
             }
           },
         } as any),
@@ -122,7 +161,7 @@ export class AiAgentService {
             }));
           },
         } as any)
-      }
-    });
+      } as any
+    } as any);
   }
 }
