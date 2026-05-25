@@ -16,6 +16,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     AiModule,
     OrdersModule,
     PaymentsModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

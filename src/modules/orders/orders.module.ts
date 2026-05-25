@@ -3,12 +3,19 @@ import { OrdersController } from './infrastructure/orders.controller';
 import { CreateOrderUseCase } from './application/use-cases/create-order.use-case';
 import { GetOrdersUseCase } from './application/use-cases/get-orders.use-case';
 import { UpdateOrderStatusUseCase } from './application/use-cases/update-order-status.use-case';
+import { UploadOrderDocumentUseCase } from './application/use-cases/upload-order-document.use-case';
 import { OrderPaymentListener } from './infrastructure/listeners/order-payment.listener';
-import { CREATE_ORDER_USE_CASE, GET_ORDERS_USE_CASE, UPDATE_ORDER_STATUS_USE_CASE } from './orders.tokens';
+import {
+  CREATE_ORDER_USE_CASE,
+  GET_ORDERS_USE_CASE,
+  UPDATE_ORDER_STATUS_USE_CASE,
+  UPLOAD_ORDER_DOCUMENT_USE_CASE,
+} from './orders.tokens';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, StorageModule],
   controllers: [OrdersController],
   providers: [
     OrderPaymentListener,
@@ -23,6 +30,10 @@ import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
     {
       provide: UPDATE_ORDER_STATUS_USE_CASE,
       useClass: UpdateOrderStatusUseCase,
+    },
+    {
+      provide: UPLOAD_ORDER_DOCUMENT_USE_CASE,
+      useClass: UploadOrderDocumentUseCase,
     },
   ],
 })
