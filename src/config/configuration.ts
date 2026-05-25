@@ -39,6 +39,10 @@ export default () => {
       apiKey: process.env.CLOUDINARY_API_KEY,
       apiSecret: process.env.CLOUDINARY_API_SECRET,
     },
+    stripe: {
+      secretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_123',
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_123',
+    },
     auth: {
       jwt: {
         accessSecret: jwtAccessSecret,

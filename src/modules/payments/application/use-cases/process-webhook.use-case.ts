@@ -11,17 +11,16 @@ export class ProcessWebhookUseCase {
   ) {}
 
   async execute(dto: WebhookDto) {
-    // 1. Validar Idempotencia
-    // Si ya existe un pago con este providerTransactionId que fue exitoso, lo ignoramos.
+    // 1. Verificar idempotencia real: si el pago ya existe por su transactionId único, se corta aquí.
     const existingPayment = await this.prisma.payment.findUnique({
       where: { providerTransactionId: dto.transactionId },
     });
 
-    if (existingPayment && existingPayment.status === 'SUCCEEDED') {
+    if (existingPayment) {
       return { message: 'Pago ya fue procesado anteriormente (Idempotencia)' };
     }
 
-    // 2. Verificar que el pedido existe y está pendiente
+    // 2. Verificar que el pedido existe
     const order = await this.prisma.order.findUnique({
       where: { id: dto.orderId },
     });
@@ -31,22 +30,32 @@ export class ProcessWebhookUseCase {
     }
 
     if (order.status !== 'PENDING_PAYMENT') {
-      throw new BadRequestException(`El pedido ya tiene un estado de: ${order.status}`);
+      // Ocurre si ya fue procesado o cancelado. Registramos el pago igual por seguridad contable
+      console.warn(`Webhook recibido para orden en estado ${order.status}`);
     }
 
-    // 3. Registrar el pago en la base de datos
-    await this.prisma.payment.create({
-      data: {
-        orderId: order.id,
-        provider: 'MOCK',
-        providerTransactionId: dto.transactionId,
-        status: 'SUCCEEDED',
-        amount: dto.amount,
-      },
+    // 3. Ejecutar transacción ACID para asegurar que el pago y el estado cambien al mismo tiempo
+    await this.prisma.$transaction(async (tx: any) => {
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          provider: 'STRIPE',
+          providerTransactionId: dto.transactionId,
+          status: 'SUCCEEDED',
+          amount: dto.amount, // Debe coincidir con order.totalAmount
+        },
+      });
+
+      // Solo actualizamos a PROCESSING si estaba PENDING_PAYMENT
+      if (order.status === 'PENDING_PAYMENT') {
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: 'PROCESSING' },
+        });
+      }
     });
 
-    // 4. Emitir el evento de dominio (Arquitectura Event-Driven)
-    // El módulo de Orders lo escuchará para actualizar el status.
+    // 4. Emitir evento asíncrono si alguien necesita enviar un correo (desacoplado)
     this.eventEmitter.emit('payment.succeeded', { orderId: order.id });
 
     return { message: 'Webhook procesado exitosamente' };
