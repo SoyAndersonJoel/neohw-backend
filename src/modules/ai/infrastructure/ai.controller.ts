@@ -38,7 +38,7 @@ export class AiController {
       // Iteramos sobre el flujo completo (fullStream) que incluye las llamadas a herramientas.
       // Así evitamos que la conexión se cierre prematuramente si la IA ejecuta una herramienta en silencio.
       for await (const part of result.fullStream) {
-        if (part.type === 'text-delta') {
+        if (part.type === 'text-delta' && part.textDelta) {
           res.write(part.textDelta);
         }
       }
