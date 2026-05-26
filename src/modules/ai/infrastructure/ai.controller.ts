@@ -35,11 +35,11 @@ export class AiController {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('Transfer-Encoding', 'chunked');
 
-      // Iteramos sobre el flujo completo (fullStream) que incluye las llamadas a herramientas.
-      // Así evitamos que la conexión se cierre prematuramente si la IA ejecuta una herramienta en silencio.
-      for await (const part of result.fullStream) {
-        if (part.type === 'text-delta' && part.textDelta) {
-          res.write(part.textDelta);
+      // Iteramos sobre el flujo de texto (textStream) que extrae automáticamente 
+      // todo el texto, incluso si hay múltiples pasos (maxSteps) con herramientas de por medio.
+      for await (const text of result.textStream) {
+        if (text) {
+          res.write(text);
         }
       }
 
