@@ -38,8 +38,8 @@ export class AiAgentService {
   }
 
   async chat(messages: any[]): Promise<any> {
-    // Usamos gemini-2.5-flash por ser excelente para uso de herramientas y de bajísima latencia
-    const model = this.google('gemini-2.5-flash');
+    // gemini-2.0-flash: 1,500 req/día gratis (vs 20 de 2.5-flash). Excelente para tool-calling.
+    const model = this.google('gemini-2.0-flash');
 
     const systemPrompt = `
       Eres Neo, el Arquitecto Experto de Hardware de NeoHW, una tienda premium de componentes de PC en Ecuador.
