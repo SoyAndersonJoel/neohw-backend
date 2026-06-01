@@ -10,9 +10,10 @@ import { CartRepository } from './domain/cart.repository';
 import { ProductsModule } from '../products/products.module';
 import { PRODUCT_REPOSITORY } from '../products/products.tokens';
 import { ProductRepository } from '../products/domain/interfaces/product.repository';
+import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 
 @Module({
-  imports: [ProductsModule],
+  imports: [ProductsModule, PrismaModule],
   controllers: [CartsController],
   providers: [
     {
