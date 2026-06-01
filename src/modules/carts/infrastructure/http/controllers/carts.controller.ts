@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, ParseUUIDPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AddToCartUseCase } from '../../../application/add-to-cart.use-case';
 import { GetCartUseCase } from '../../../application/get-cart.use-case';
@@ -35,7 +35,7 @@ export class CartsController {
   @Patch('items/:id')
   async updateItemQuantity(
     @Req() req: any,
-    @Param('id') cartItemId: string,
+    @Param('id', ParseUUIDPipe) cartItemId: string,
     @Body() dto: UpdateCartItemDto,
   ) {
     const userId = req.user.id;
@@ -44,8 +44,9 @@ export class CartsController {
   }
 
   @Delete('items/:id')
-  async removeItem(@Param('id') cartItemId: string) {
+  async removeItem(@Param('id', ParseUUIDPipe) cartItemId: string) {
     await this.removeCartItemUseCase.execute(cartItemId);
     return { success: true, message: 'Cart item removed' };
   }
 }
+
