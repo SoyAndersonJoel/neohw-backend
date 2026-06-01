@@ -5,9 +5,11 @@ import { Role } from '../../users/domain/enums/role.enum';
 import { Roles } from '../../auth/infrastructure/decorators/roles.decorator';
 import { RolesGuard } from '../../auth/infrastructure/guards/roles.guard';
 import { CreateOrderDto } from '../application/dtos/create-order.dto';
+import { CreateOrderFromCartDto } from '../application/dtos/create-order-from-cart.dto';
 import { UpdateOrderStatusDto } from '../application/dtos/update-order-status.dto';
-import { CREATE_ORDER_USE_CASE, GET_ORDERS_USE_CASE, UPDATE_ORDER_STATUS_USE_CASE, UPLOAD_ORDER_DOCUMENT_USE_CASE } from '../orders.tokens';
+import { CREATE_ORDER_USE_CASE, CREATE_ORDER_FROM_CART_USE_CASE, GET_ORDERS_USE_CASE, UPDATE_ORDER_STATUS_USE_CASE, UPLOAD_ORDER_DOCUMENT_USE_CASE } from '../orders.tokens';
 import type { CreateOrderUseCase } from '../application/use-cases/create-order.use-case';
+import type { CreateOrderFromCartUseCase } from '../application/use-cases/create-order-from-cart.use-case';
 import type { GetOrdersUseCase } from '../application/use-cases/get-orders.use-case';
 import type { UpdateOrderStatusUseCase } from '../application/use-cases/update-order-status.use-case';
 import type { UploadOrderDocumentUseCase } from '../application/use-cases/upload-order-document.use-case';
@@ -31,6 +33,8 @@ export class OrdersController {
   constructor(
     @Inject(CREATE_ORDER_USE_CASE)
     private readonly createOrderUseCase: CreateOrderUseCase,
+    @Inject(CREATE_ORDER_FROM_CART_USE_CASE)
+    private readonly createOrderFromCartUseCase: CreateOrderFromCartUseCase,
     @Inject(GET_ORDERS_USE_CASE)
     private readonly getOrdersUseCase: GetOrdersUseCase,
     @Inject(UPDATE_ORDER_STATUS_USE_CASE)
@@ -46,6 +50,18 @@ export class OrdersController {
     const order = await this.createOrderUseCase.execute(userId, dto);
     return {
       message: 'Pedido creado exitosamente, pendiente de pago',
+      orderId: order.id,
+      totalAmount: order.totalAmount,
+    };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('from-cart')
+  async createOrderFromCart(@Request() req: any, @Body() dto: CreateOrderFromCartDto) {
+    const userId = req.user.id;
+    const order = await this.createOrderFromCartUseCase.execute(userId, dto);
+    return {
+      message: 'Pedido creado desde el carrito exitosamente, pendiente de pago',
       orderId: order.id,
       totalAmount: order.totalAmount,
     };
