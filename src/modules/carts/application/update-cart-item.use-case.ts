@@ -1,6 +1,8 @@
 import { CartRepository } from '../domain/cart.repository';
 import { ProductRepository } from '../../products/domain/interfaces/product.repository';
 import { InsufficientStockException } from '../domain/exceptions/insufficient-stock.exception';
+import { ProductNotFoundException } from '../domain/exceptions/product-not-found.exception';
+import { CartItemNotFoundException } from '../domain/exceptions/cart-item-not-found.exception';
 
 export class UpdateCartItemUseCase {
   constructor(
@@ -11,12 +13,12 @@ export class UpdateCartItemUseCase {
   async execute(userId: string, cartItemId: string, quantity: number): Promise<void> {
     const cartItem = await this.cartRepository.findItemById(cartItemId);
     if (!cartItem) {
-      throw new Error(`Cart item with ID ${cartItemId} not found`);
+      throw new CartItemNotFoundException(cartItemId);
     }
 
     const product = await this.productRepository.findById(cartItem.productId);
     if (!product) {
-      throw new Error(`Product with ID ${cartItem.productId} not found`);
+      throw new ProductNotFoundException(cartItem.productId);
     }
 
     if (product.stock < quantity) {

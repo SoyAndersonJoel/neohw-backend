@@ -4,9 +4,12 @@ import {
   Injectable,
   NestInterceptor,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Observable, catchError } from 'rxjs';
 import { InsufficientStockException } from '../domain/exceptions/insufficient-stock.exception';
+import { ProductNotFoundException } from '../domain/exceptions/product-not-found.exception';
+import { CartItemNotFoundException } from '../domain/exceptions/cart-item-not-found.exception';
 
 @Injectable()
 export class CartsErrorInterceptor implements NestInterceptor {
@@ -24,8 +27,15 @@ export class CartsErrorInterceptor implements NestInterceptor {
             },
           });
         }
+        if (error instanceof ProductNotFoundException || error instanceof CartItemNotFoundException) {
+          throw new NotFoundException({
+            message: error.message,
+            code: 'NOT_FOUND',
+          });
+        }
         throw error;
       }),
     );
   }
 }
+

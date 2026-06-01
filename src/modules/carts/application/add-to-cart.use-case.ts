@@ -1,6 +1,7 @@
 import { CartRepository } from '../domain/cart.repository';
 import { ProductRepository } from '../../products/domain/interfaces/product.repository';
 import { InsufficientStockException } from '../domain/exceptions/insufficient-stock.exception';
+import { ProductNotFoundException } from '../domain/exceptions/product-not-found.exception';
 
 export class AddToCartUseCase {
   constructor(
@@ -12,7 +13,7 @@ export class AddToCartUseCase {
     // 1. Verificamos que el producto exista y tenga stock
     const product = await this.productRepository.findById(productId);
     if (!product) {
-      throw new Error(`Product with ID ${productId} not found`);
+      throw new ProductNotFoundException(productId);
     }
 
     if (product.stock < quantity) {
