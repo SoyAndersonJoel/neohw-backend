@@ -69,11 +69,24 @@ export class CompatibilityEngine {
 
     switch (rule.ruleType) {
       case 'MUST_MATCH':
-        if (sourceValue.toLowerCase() === targetValue.toLowerCase()) {
-          status = 'PASS';
-          detail = `Ambos coinciden: ${sourceValue}`;
+        const matchOperator = rule.condition?.operator ?? 'exact';
+        
+        if (matchOperator === 'includes') {
+          // targetValue es la lista (ej. "ATX, Micro-ATX") y sourceValue es lo buscado (ej. "Micro-ATX")
+          if (targetValue.toLowerCase().includes(sourceValue.toLowerCase())) {
+            status = 'PASS';
+            detail = `Soportado: ${targetValue} incluye a ${sourceValue}`;
+          } else {
+            detail = `Incompatible: ${targetValue} no incluye a ${sourceValue}`;
+          }
         } else {
-          detail = `No coinciden: ${sourceValue} vs ${targetValue}`;
+          // exact match
+          if (sourceValue.toLowerCase() === targetValue.toLowerCase()) {
+            status = 'PASS';
+            detail = `Ambos coinciden: ${sourceValue}`;
+          } else {
+            detail = `No coinciden: ${sourceValue} vs ${targetValue}`;
+          }
         }
         break;
 
