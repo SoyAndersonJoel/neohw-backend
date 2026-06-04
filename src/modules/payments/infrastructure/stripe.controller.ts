@@ -18,8 +18,9 @@ export class StripeController {
     }
 
     // URLs a las que Stripe redirigirá al usuario después del pago
-    const successUrl = `http://localhost:3000/success?order_id=${orderId}`;
-    const cancelUrl = `http://localhost:3000/cancel?order_id=${orderId}`;
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const successUrl = `${baseUrl}/success?order_id=${orderId}`;
+    const cancelUrl = `${baseUrl}/cancel?order_id=${orderId}`;
 
     return this.stripeService.createCheckoutSession(orderId, successUrl, cancelUrl);
   }
