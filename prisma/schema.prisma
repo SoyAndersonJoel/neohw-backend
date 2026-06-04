@@ -22,23 +22,24 @@ enum AuthProvider {
 }
 
 model User {
-  id             String         @id @default(uuid())
-  email          String         @unique
-  firstName      String?
-  lastName       String?
-  phone          String?
-  passwordHash   String?
-  provider       AuthProvider   @default(LOCAL)
-  providerId     String?
-  role           Role           @default(USER)
-  isActive       Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  refreshTokens  RefreshToken[]
-  products       Product[]
-  orders         Order[]
-  assignedOrders Order[]        @relation("OrderAssignedSeller")
-  cart           Cart?
+  id               String            @id @default(uuid())
+  email            String            @unique
+  firstName        String?
+  lastName         String?
+  phone            String?
+  passwordHash     String?
+  provider         AuthProvider      @default(LOCAL)
+  providerId       String?
+  role             Role              @default(USER)
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  refreshTokens    RefreshToken[]
+  products         Product[]
+  orders           Order[]
+  assignedOrders   Order[]           @relation("OrderAssignedSeller")
+  assemblyProjects AssemblyProject[]
+  cart             Cart?
 }
 
 model RefreshToken {
@@ -134,11 +135,12 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category   Category           @relation(fields: [categoryId], references: [id])
-  seller     User               @relation(fields: [sellerId], references: [id])
-  attributes ProductAttribute[]
-  orderItems OrderItem[]
-  cartItems  CartItem[]
+  category             Category              @relation(fields: [categoryId], references: [id])
+  seller               User                  @relation(fields: [sellerId], references: [id])
+  attributes           ProductAttribute[]
+  orderItems           OrderItem[]
+  cartItems            CartItem[]
+  assemblyProjectItems AssemblyProjectItem[]
 
   @@index([categoryId])
   @@index([sellerId])
@@ -288,5 +290,37 @@ model CartItem {
 
   @@unique([cartId, productId])
   @@index([cartId])
+  @@index([productId])
+}
+
+// ─── Assembly Projects Models (Proyectos de Ensamblaje) ─────────
+
+model AssemblyProject {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items AssemblyProjectItem[]
+
+  @@index([userId])
+}
+
+model AssemblyProjectItem {
+  id        String   @id @default(uuid())
+  projectId String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project AssemblyProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, productId])
+  @@index([projectId])
   @@index([productId])
 }

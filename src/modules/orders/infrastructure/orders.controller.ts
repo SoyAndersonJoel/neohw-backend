@@ -7,12 +7,13 @@ import { RolesGuard } from '../../auth/infrastructure/guards/roles.guard';
 import { CreateOrderDto } from '../application/dtos/create-order.dto';
 import { CreateOrderFromCartDto } from '../application/dtos/create-order-from-cart.dto';
 import { UpdateOrderStatusDto } from '../application/dtos/update-order-status.dto';
-import { CREATE_ORDER_USE_CASE, CREATE_ORDER_FROM_CART_USE_CASE, GET_ORDERS_USE_CASE, UPDATE_ORDER_STATUS_USE_CASE, UPLOAD_ORDER_DOCUMENT_USE_CASE } from '../orders.tokens';
+import { CREATE_ORDER_USE_CASE, CREATE_ORDER_FROM_CART_USE_CASE, GET_ORDERS_USE_CASE, UPDATE_ORDER_STATUS_USE_CASE, UPLOAD_ORDER_DOCUMENT_USE_CASE, GET_MY_ORDERS_USE_CASE } from '../orders.tokens';
 import type { CreateOrderUseCase } from '../application/use-cases/create-order.use-case';
 import type { CreateOrderFromCartUseCase } from '../application/use-cases/create-order-from-cart.use-case';
 import type { GetOrdersUseCase } from '../application/use-cases/get-orders.use-case';
 import type { UpdateOrderStatusUseCase } from '../application/use-cases/update-order-status.use-case';
 import type { UploadOrderDocumentUseCase } from '../application/use-cases/upload-order-document.use-case';
+import type { GetMyOrdersUseCase } from '../application/use-cases/get-my-orders.use-case';
 import { OrderStatus } from '../../../generated/prisma/enums';
 
 // Configuración de Multer: filtro de formatos permitidos
@@ -41,6 +42,8 @@ export class OrdersController {
     private readonly updateOrderStatusUseCase: UpdateOrderStatusUseCase,
     @Inject(UPLOAD_ORDER_DOCUMENT_USE_CASE)
     private readonly uploadOrderDocumentUseCase: UploadOrderDocumentUseCase,
+    @Inject(GET_MY_ORDERS_USE_CASE)
+    private readonly getMyOrdersUseCase: GetMyOrdersUseCase,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -65,6 +68,20 @@ export class OrdersController {
       orderId: order.id,
       totalAmount: order.totalAmount,
     };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('my-orders')
+  async getMyOrders(
+    @Request() req: any,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.getMyOrdersUseCase.execute({
+      userId: req.user.id,
+      page,
+      limit,
+    });
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
