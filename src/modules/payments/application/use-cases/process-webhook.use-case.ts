@@ -48,9 +48,33 @@ export class ProcessWebhookUseCase {
 
       // Solo actualizamos a PROCESSING si estaba PENDING_PAYMENT
       if (order.status === 'PENDING_PAYMENT') {
+        
+        // --- INICIO ALGORITMO PUSH (Equidad Least-Loaded) ---
+        // 1. Buscamos a todos los vendedores activos y contamos cuántas órdenes tienen "PROCESSING"
+        const sellers = await tx.user.findMany({
+          where: { role: 'SELLER', isActive: true },
+          select: { 
+            id: true, 
+            _count: { select: { assignedOrders: { where: { status: 'PROCESSING' } } } } 
+          },
+        });
+
+        let assignedSellerId = null;
+        if (sellers.length > 0) {
+          // 2. Ordenamos de menor a mayor carga de trabajo
+          sellers.sort((a: any, b: any) => a._count.assignedOrders - b._count.assignedOrders);
+          
+          // 3. Seleccionamos al primero (el más desocupado)
+          assignedSellerId = sellers[0].id;
+        }
+        // --- FIN ALGORITMO ---
+
         await tx.order.update({
           where: { id: order.id },
-          data: { status: 'PROCESSING' },
+          data: { 
+            status: 'PROCESSING',
+            assignedSellerId: assignedSellerId 
+          },
         });
       }
     });

@@ -71,11 +71,18 @@ export class OrdersController {
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
   @Get()
   async getOrders(
+    @Request() req: any,
     @Query('status') status?: OrderStatus,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.getOrdersUseCase.execute({ status, page, limit });
+    return this.getOrdersUseCase.execute({ 
+      status, 
+      page, 
+      limit, 
+      userRole: req.user.role, 
+      userId: req.user.id 
+    });
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
