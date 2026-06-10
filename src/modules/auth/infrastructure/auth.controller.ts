@@ -16,6 +16,8 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
+import { RequestOtpDto } from '../application/dtos/request-otp.dto';
+import { ResetPasswordOtpDto } from '../application/dtos/reset-password-otp.dto';
 import { AuthProvider } from '../../users/domain/enums/auth-provider.enum';
 import {
   AccessRequestUser,
@@ -27,13 +29,17 @@ import {
   REGISTER_USE_CASE, 
   REFRESH_TOKEN_USE_CASE, 
   LOGOUT_USE_CASE,
-  SOCIAL_LOGIN_USE_CASE
+  SOCIAL_LOGIN_USE_CASE,
+  REQUEST_OTP_USE_CASE,
+  RESET_PASSWORD_OTP_USE_CASE
 } from '../auth.tokens';
 import { LoginUseCase } from '../application/use-cases/login.use-case';
 import { RegisterUseCase } from '../application/use-cases/register.use-case';
 import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 import { SocialLoginUseCase } from '../application/use-cases/social-login.use-case';
+import type { RequestOtpUseCase } from '../application/use-cases/request-otp.use-case';
+import type { ResetPasswordOtpUseCase } from '../application/use-cases/reset-password-otp.use-case';
 
 @Controller('auth')
 @UseInterceptors(AuthErrorInterceptor)
@@ -44,6 +50,8 @@ export class AuthController {
     @Inject(REFRESH_TOKEN_USE_CASE) private readonly refreshTokenUseCase: RefreshTokenUseCase,
     @Inject(LOGOUT_USE_CASE) private readonly logoutUseCase: LogoutUseCase,
     @Inject(SOCIAL_LOGIN_USE_CASE) private readonly socialLoginUseCase: SocialLoginUseCase,
+    @Inject(REQUEST_OTP_USE_CASE) private readonly requestOtpUseCase: RequestOtpUseCase,
+    @Inject(RESET_PASSWORD_OTP_USE_CASE) private readonly resetPasswordOtpUseCase: ResetPasswordOtpUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -127,6 +135,16 @@ export class AuthController {
     @Req() req: Request & { user: AccessRequestUser },
   ): Promise<{ user: AccessRequestUser }> {
     return { user: req.user };
+  }
+
+  @Post('request-otp')
+  async requestOtp(@Body() dto: RequestOtpDto) {
+    return this.requestOtpUseCase.execute(dto);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordOtpDto) {
+    return this.resetPasswordOtpUseCase.execute(dto);
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {

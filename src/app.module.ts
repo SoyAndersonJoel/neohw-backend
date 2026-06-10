@@ -20,6 +20,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { CartsModule } from './modules/carts/carts.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     CartsModule,
     ProjectsModule,
     StatisticsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
