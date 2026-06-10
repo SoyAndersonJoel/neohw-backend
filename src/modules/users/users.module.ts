@@ -11,6 +11,7 @@ import type { UserRepository } from './domain/interfaces/user.repository';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
 import { UsersController } from './infrastructure/users.controller';
 import { RolesGuard } from '../auth/infrastructure/guards/roles.guard';
+import { NotificationsService } from '../notifications/application/services/notifications.service';
 import {
   USER_REPOSITORY,
   CHANGE_USER_ROLE_USE_CASE,
@@ -49,9 +50,9 @@ const findAllUsersUseCaseProvider = {
 
 const changeUserRoleUseCaseProvider = {
   provide: CHANGE_USER_ROLE_USE_CASE,
-  useFactory: (userRepository: UserRepository): ChangeUserRoleUseCase =>
-    new ChangeUserRoleUseCase(userRepository),
-  inject: [USER_REPOSITORY],
+  useFactory: (userRepository: UserRepository, notificationsService: NotificationsService): ChangeUserRoleUseCase =>
+    new ChangeUserRoleUseCase(userRepository, notificationsService),
+  inject: [USER_REPOSITORY, NotificationsService],
 };
 
 const updateUserUseCaseProvider = {

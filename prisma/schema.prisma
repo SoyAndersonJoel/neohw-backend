@@ -324,3 +324,23 @@ model AssemblyProjectItem {
   @@index([projectId])
   @@index([productId])
 }
+
+// ─── Security Models (Notificaciones y OTP) ─────────
+
+enum OtpPurpose {
+  ACCOUNT_VERIFICATION
+  PASSWORD_RESET
+}
+
+model OtpCode {
+  id        String     @id @default(uuid())
+  email     String
+  code      String     @db.VarChar(6)
+  purpose   OtpPurpose
+  expiresAt DateTime
+  isUsed    Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([email, purpose])
+}

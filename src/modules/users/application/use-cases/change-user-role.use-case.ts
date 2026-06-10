@@ -2,6 +2,7 @@ import { Role } from '../../domain/enums/role.enum';
 import { User } from '../../domain/entities/user.entity';
 import { UserRepository } from '../../domain/interfaces/user.repository';
 import { UsersError } from '../errors/users.error';
+import { NotificationsService } from '../../../notifications/application/services/notifications.service';
 
 export type ChangeUserRoleInput = {
   targetUserId: string;
@@ -11,7 +12,10 @@ export type ChangeUserRoleInput = {
 };
 
 export class ChangeUserRoleUseCase {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async execute(input: ChangeUserRoleInput): Promise<User> {
     // 1. No puedes cambiarte el rol a ti mismo
@@ -58,6 +62,13 @@ export class ChangeUserRoleUseCase {
       return targetUser;
     }
 
-    return this.userRepository.updateRole(input.targetUserId, input.newRole);
+    const updatedUser = await this.userRepository.updateRole(input.targetUserId, input.newRole);
+
+    // Enviar correo asíncronamente
+    this.notifications.sendRoleChangeEmail(updatedUser.email, updatedUser.firstName || 'Usuario', input.newRole).catch(err => {
+      console.error('No se pudo enviar correo de cambio de rol:', err);
+    });
+
+    return updatedUser;
   }
 }
