@@ -82,11 +82,10 @@ const registerUseCaseProvider = {
   useFactory: (
     createUserUseCase: CreateUserUseCase,
     hashService: HashService,
-    authTokenService: AuthTokenService,
     requestOtpUseCase: RequestOtpUseCase,
   ): RegisterUseCase =>
-    new RegisterUseCase(createUserUseCase, hashService, authTokenService, requestOtpUseCase),
-  inject: [CreateUserUseCase, HASH_SERVICE, AUTH_TOKEN_SERVICE, REQUEST_OTP_USE_CASE],
+    new RegisterUseCase(createUserUseCase, hashService, requestOtpUseCase),
+  inject: [CreateUserUseCase, HASH_SERVICE, REQUEST_OTP_USE_CASE],
 };
 
 const loginUseCaseProvider = {

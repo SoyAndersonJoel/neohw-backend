@@ -2,6 +2,7 @@ export type AuthErrorCode =
   | 'EMAIL_IN_USE'
   | 'INVALID_CREDENTIALS'
   | 'USER_DISABLED'
+  | 'UNVERIFIED_ACCOUNT'
   | 'INVALID_REFRESH_TOKEN';
 
 export class AuthError extends Error {

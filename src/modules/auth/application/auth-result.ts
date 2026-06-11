@@ -9,6 +9,7 @@ export type PublicUser = {
   phone: string | null;
   role: Role;
   isActive: boolean;
+  isVerified: boolean;
 };
 
 export type AuthResult = {
@@ -25,4 +26,5 @@ export const toPublicUser = (user: User): PublicUser => ({
   phone: user.phone,
   role: user.role,
   isActive: user.isActive,
+  isVerified: user.isVerified,
 });

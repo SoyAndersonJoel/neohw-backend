@@ -8,6 +8,7 @@ export type CreateUserParams = {
   provider?: AuthProvider;
   providerId?: string | null;
   role: Role;
+  isVerified?: boolean;
 };
 
 export interface UpdateUserParams {

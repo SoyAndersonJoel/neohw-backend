@@ -13,6 +13,8 @@ export const handleAuthError = (error: unknown): never => {
         throw new ConflictException('Email already registered');
       case 'USER_DISABLED':
         throw new ForbiddenException('User is disabled');
+      case 'UNVERIFIED_ACCOUNT':
+        throw new ForbiddenException('Tu cuenta no ha sido verificada. Revisa tu correo e ingresa el código OTP.');
       case 'INVALID_CREDENTIALS':
       case 'INVALID_REFRESH_TOKEN':
         throw new UnauthorizedException('Invalid credentials');

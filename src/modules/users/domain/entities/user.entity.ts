@@ -12,6 +12,7 @@ export type User = {
   providerId: string | null;
   role: Role;
   isActive: boolean;
+  isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -60,13 +60,9 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDto> {
-    const result = await this.registerUseCase.execute(dto);
-    this.setRefreshCookie(res, result.refreshToken);
-    return { accessToken: result.accessToken, user: result.user };
+  async register(@Body() registerDto: RegisterDto) {
+    const result = await this.registerUseCase.execute(registerDto);
+    return result;
   }
 
   @Post('login')
@@ -152,8 +148,13 @@ export class AuthController {
   }
 
   @Post('verify-account')
-  async verifyAccount(@Body() dto: VerifyAccountOtpDto) {
-    return this.verifyAccountOtpUseCase.execute(dto);
+  async verifyAccount(
+    @Body() dto: VerifyAccountOtpDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
+    const result = await this.verifyAccountOtpUseCase.execute(dto);
+    this.setRefreshCookie(res, result.refreshToken);
+    return { accessToken: result.accessToken, user: result.user };
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {
