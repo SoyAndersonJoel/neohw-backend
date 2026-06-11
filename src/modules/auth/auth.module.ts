@@ -12,6 +12,7 @@ import { RegisterUseCase } from './application/use-cases/register.use-case';
 import { SocialLoginUseCase } from './application/use-cases/social-login.use-case';
 import { RequestOtpUseCase } from './application/use-cases/request-otp.use-case';
 import { ResetPasswordOtpUseCase } from './application/use-cases/reset-password-otp.use-case';
+import { VerifyAccountOtpUseCase } from './application/use-cases/verify-account-otp.use-case';
 import { CreateUserUseCase } from '../users/application/use-cases/create-user.use-case';
 import { FindUserByEmailUseCase } from '../users/application/use-cases/find-user-by-email.use-case';
 import { FindUserByIdUseCase } from '../users/application/use-cases/find-user-by-id.use-case';
@@ -30,6 +31,7 @@ import {
   FACEBOOK_AUTH_SERVICE,
   REQUEST_OTP_USE_CASE,
   RESET_PASSWORD_OTP_USE_CASE,
+  VERIFY_ACCOUNT_OTP_USE_CASE,
 } from './auth.tokens';
 import { AuthController } from './infrastructure/auth.controller';
 import { RolesGuard } from './infrastructure/guards/roles.guard';
@@ -81,9 +83,10 @@ const registerUseCaseProvider = {
     createUserUseCase: CreateUserUseCase,
     hashService: HashService,
     authTokenService: AuthTokenService,
+    requestOtpUseCase: RequestOtpUseCase,
   ): RegisterUseCase =>
-    new RegisterUseCase(createUserUseCase, hashService, authTokenService),
-  inject: [CreateUserUseCase, HASH_SERVICE, AUTH_TOKEN_SERVICE],
+    new RegisterUseCase(createUserUseCase, hashService, authTokenService, requestOtpUseCase),
+  inject: [CreateUserUseCase, HASH_SERVICE, AUTH_TOKEN_SERVICE, REQUEST_OTP_USE_CASE],
 };
 
 const loginUseCaseProvider = {
@@ -169,6 +172,7 @@ const socialLoginUseCaseProvider = {
     { provide: FACEBOOK_AUTH_SERVICE, useClass: FacebookAuthService },
     { provide: REQUEST_OTP_USE_CASE, useClass: RequestOtpUseCase },
     { provide: RESET_PASSWORD_OTP_USE_CASE, useClass: ResetPasswordOtpUseCase },
+    { provide: VERIFY_ACCOUNT_OTP_USE_CASE, useClass: VerifyAccountOtpUseCase },
   ],
   exports: [RolesGuard],
 })
