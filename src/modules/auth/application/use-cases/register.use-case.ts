@@ -3,6 +3,8 @@ import { AuthResult, toPublicUser } from '../auth-result';
 import { AuthTokenService } from '../auth-token.service';
 import { HashService } from '../../domain/interfaces/hash.service';
 import { CreateUserUseCase } from '../../../users/application/use-cases/create-user.use-case';
+import { RequestOtpUseCase } from './request-otp.use-case';
+import { OtpPurpose } from '../../../../generated/prisma/enums';
 
 export type RegisterInput = {
   email: string;
@@ -14,6 +16,7 @@ export class RegisterUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly hashService: HashService,
     private readonly authTokenService: AuthTokenService,
+    private readonly requestOtpUseCase: RequestOtpUseCase,
   ) {}
 
   async execute(input: RegisterInput): Promise<AuthResult> {
@@ -22,6 +25,14 @@ export class RegisterUseCase {
       email: input.email,
       passwordHash,
       role: Role.USER,
+    });
+
+    // Enviar código de verificación de forma asíncrona
+    this.requestOtpUseCase.execute({
+      email: input.email,
+      purpose: OtpPurpose.ACCOUNT_VERIFICATION,
+    }).catch(err => {
+      console.error('Error enviando correo de verificación inicial:', err);
     });
 
     const tokens = await this.authTokenService.issueTokens(user);

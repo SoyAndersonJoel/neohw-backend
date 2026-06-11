@@ -18,6 +18,7 @@ import { RegisterDto } from './dto/register.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { RequestOtpDto } from '../application/dtos/request-otp.dto';
 import { ResetPasswordOtpDto } from '../application/dtos/reset-password-otp.dto';
+import { VerifyAccountOtpDto } from '../application/dtos/verify-account-otp.dto';
 import { AuthProvider } from '../../users/domain/enums/auth-provider.enum';
 import {
   AccessRequestUser,
@@ -31,7 +32,8 @@ import {
   LOGOUT_USE_CASE,
   SOCIAL_LOGIN_USE_CASE,
   REQUEST_OTP_USE_CASE,
-  RESET_PASSWORD_OTP_USE_CASE
+  RESET_PASSWORD_OTP_USE_CASE,
+  VERIFY_ACCOUNT_OTP_USE_CASE
 } from '../auth.tokens';
 import { LoginUseCase } from '../application/use-cases/login.use-case';
 import { RegisterUseCase } from '../application/use-cases/register.use-case';
@@ -40,6 +42,7 @@ import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 import { SocialLoginUseCase } from '../application/use-cases/social-login.use-case';
 import type { RequestOtpUseCase } from '../application/use-cases/request-otp.use-case';
 import type { ResetPasswordOtpUseCase } from '../application/use-cases/reset-password-otp.use-case';
+import type { VerifyAccountOtpUseCase } from '../application/use-cases/verify-account-otp.use-case';
 
 @Controller('auth')
 @UseInterceptors(AuthErrorInterceptor)
@@ -52,6 +55,7 @@ export class AuthController {
     @Inject(SOCIAL_LOGIN_USE_CASE) private readonly socialLoginUseCase: SocialLoginUseCase,
     @Inject(REQUEST_OTP_USE_CASE) private readonly requestOtpUseCase: RequestOtpUseCase,
     @Inject(RESET_PASSWORD_OTP_USE_CASE) private readonly resetPasswordOtpUseCase: ResetPasswordOtpUseCase,
+    @Inject(VERIFY_ACCOUNT_OTP_USE_CASE) private readonly verifyAccountOtpUseCase: VerifyAccountOtpUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -145,6 +149,11 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordOtpDto) {
     return this.resetPasswordOtpUseCase.execute(dto);
+  }
+
+  @Post('verify-account')
+  async verifyAccount(@Body() dto: VerifyAccountOtpDto) {
+    return this.verifyAccountOtpUseCase.execute(dto);
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {
