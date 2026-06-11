@@ -15,11 +15,10 @@ export class RegisterUseCase {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly hashService: HashService,
-    private readonly authTokenService: AuthTokenService,
     private readonly requestOtpUseCase: RequestOtpUseCase,
   ) {}
 
-  async execute(input: RegisterInput): Promise<AuthResult> {
+  async execute(input: RegisterInput): Promise<{ message: string }> {
     const passwordHash = await this.hashService.hash(input.password);
     const user = await this.createUserUseCase.execute({
       email: input.email,
@@ -35,11 +34,6 @@ export class RegisterUseCase {
       console.error('Error enviando correo de verificación inicial:', err);
     });
 
-    const tokens = await this.authTokenService.issueTokens(user);
-    return {
-      user: toPublicUser(user),
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    };
+    return { message: 'Registro exitoso. Por favor, revisa tu correo electrónico para verificar tu cuenta.' };
   }
 }

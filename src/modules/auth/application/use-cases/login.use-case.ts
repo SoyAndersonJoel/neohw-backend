@@ -24,6 +24,9 @@ export class LoginUseCase {
     if (!user.isActive) {
       throw new AuthError('USER_DISABLED');
     }
+    if (!user.isVerified) {
+      throw new AuthError('UNVERIFIED_ACCOUNT');
+    }
 
     if (!user.passwordHash) {
       // El usuario se registró con Google/Facebook y no tiene contraseña local

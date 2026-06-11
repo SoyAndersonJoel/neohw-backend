@@ -39,6 +39,7 @@ export class SocialLoginUseCase {
         provider: input.provider,
         providerId: socialUser.providerId,
         role: Role.USER,
+        isVerified: true,
       });
     }
 

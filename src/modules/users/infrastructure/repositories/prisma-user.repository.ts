@@ -21,6 +21,7 @@ const userSelect = {
   providerId: true,
   role: true,
   isActive: true,
+  isVerified: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -55,6 +56,7 @@ export class PrismaUserRepository implements UserRepository {
         provider: data.provider,
         providerId: data.providerId,
         role: data.role as PrismaRole,
+        isVerified: data.isVerified ?? false,
       },
       select: userSelect,
     });
@@ -119,6 +121,7 @@ export class PrismaUserRepository implements UserRepository {
       providerId: user.providerId,
       role: user.role as Role,
       isActive: user.isActive,
+      isVerified: user.isVerified,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
