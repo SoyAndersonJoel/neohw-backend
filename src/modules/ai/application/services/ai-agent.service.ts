@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { streamText, tool } from 'ai';
+import { streamText, generateText, tool } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 
@@ -58,7 +58,7 @@ export class AiAgentService {
       3. Si la herramienta 'searchProducts' devuelve que un producto tiene bajo stock, menciónale al cliente que quedan pocas unidades para generar sentido de oportunidad.
     `;
 
-    return streamText({
+    return generateText({
       model,
       system: systemPrompt,
       messages: messages as any,
@@ -99,7 +99,7 @@ export class AiAgentService {
               args.type
             ].filter(Boolean);
             const search = searchParts.length > 0 ? searchParts.join(' ') : undefined;
-            const limit = args.limit ?? 10;
+            const limit = args.limit ?? 3;
             
             const result = await this.findAllProductsUseCase.execute({
               filters: { category, brand, search, isActive: true },
@@ -109,20 +109,14 @@ export class AiAgentService {
               order: 'asc',
             });
             
+            // Devolver un array de strings simples en lugar de JSON complejo para evitar confundir a Gemini
             return result.data.map((p: any) => {
               let stockStatus = 'En stock';
               if (p.stock <= 0) stockStatus = 'AGOTADO';
               else if (p.stock <= 3) stockStatus = `¡Últimas ${p.stock} unidades!`;
 
-              return {
-                id: p.id,
-                name: p.name,
-                brand: p.brand,
-                price: p.price,
-                stockAvailability: stockStatus,
-                category: p.category.name,
-                attributes: p.attributes.map((a: any) => `${a.name}: ${a.value}${a.unit ? ` ${a.unit}` : ''}`)
-              };
+              const attributes = p.attributes.map((a: any) => `${a.name}: ${a.value}${a.unit ? ` ${a.unit}` : ''}`).join(', ');
+              return `[ID: ${p.id}] ${p.name} (${p.brand}) - Precio: $${p.price} - Stock: ${stockStatus} - Cat: ${p.category?.name || 'N/A'} - Detalles: ${attributes}`;
             });
           },
         } as any),

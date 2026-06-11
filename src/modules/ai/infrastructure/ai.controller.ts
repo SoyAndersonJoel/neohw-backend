@@ -29,16 +29,15 @@ export class AiController {
         });
       }
 
-      const result = await this.aiAgentService.chat(messagesArray);
+      let result = await this.aiAgentService.chat(messagesArray);
+      let fullText = result.text;
 
-      // Consumir todo el textStream y acumular el texto completo.
-      // textStream espera internamente a que todas las herramientas terminen
-      // (multi-step) antes de enviar el texto final de cada paso.
-      let fullText = '';
-      for await (const text of result.textStream) {
-        if (text) {
-          fullText += text;
-        }
+      // Failsafe: Si la IA ejecutó herramientas pero no redactó un texto final (comportamiento a veces errático de Gemini),
+      // forzamos manualmente un segundo paso enviándole el historial con los resultados de las herramientas.
+      if (!fullText && result.response?.messages?.length > 0) {
+        const historyWithTools = [...messagesArray, ...result.response.messages];
+        result = await this.aiAgentService.chat(historyWithTools);
+        fullText = result.text || 'He revisado el inventario pero no he podido formular una respuesta en este momento.';
       }
 
       // Respuesta JSON limpia y predecible para cualquier cliente (Insomnia, Postman, Frontend)
