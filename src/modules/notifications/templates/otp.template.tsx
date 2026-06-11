@@ -59,7 +59,7 @@ export const OtpEmail = ({ validationCode = '123456', purpose = 'Verificación d
 export default OtpEmail;
 
 const main = {
-  backgroundColor: '#0B1120', // Azul muy oscuro/negro
+  backgroundColor: '#ffffff', // Fondo blanco
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
 };

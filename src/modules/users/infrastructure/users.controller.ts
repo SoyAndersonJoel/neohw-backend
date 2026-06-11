@@ -64,6 +64,15 @@ export class UsersController {
     };
   }
 
+  @Get('me')
+  async getMyProfile(@Req() req: Request & { user: AccessRequestUser }) {
+    const user = await this.findUserByIdUseCase.execute(req.user.id);
+    if (!user) {
+      throw new Error('USER_NOT_FOUND');
+    }
+    return { user: toPublicUser(user) };
+  }
+
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
@@ -104,8 +113,10 @@ export class UsersController {
     @Param('id') targetUserId: string,
     @Req() req: Request & { user: AccessRequestUser },
   ) {
+    const actualTargetId = targetUserId === 'me' ? req.user.id : targetUserId;
+
     const deletedUser = await this.softDeleteUserUseCase.execute({
-      targetUserId,
+      targetUserId: actualTargetId,
       requesterId: req.user.id,
       requesterRole: req.user.role,
     });

@@ -17,17 +17,14 @@ export class SoftDeleteUserUseCase {
       throw new UsersError('USER_NOT_FOUND');
     }
 
-    // Solo ADMIN y SUPER_ADMIN pueden hacer borrado lógico
-    if (input.requesterRole !== 'ADMIN' && input.requesterRole !== 'SUPER_ADMIN') {
+    const isSelfDelete = input.targetUserId === input.requesterId;
+    const isRequesterAdmin = input.requesterRole === 'ADMIN' || input.requesterRole === 'SUPER_ADMIN';
+
+    if (!isSelfDelete && !isRequesterAdmin) {
       throw new UsersError('INSUFFICIENT_PERMISSIONS');
     }
 
-    // Un usuario no se puede borrar a sí mismo (para evitar que admins se bloqueen)
-    if (input.targetUserId === input.requesterId) {
-      throw new UsersError('INSUFFICIENT_PERMISSIONS', 'No puedes borrar tu propia cuenta');
-    }
-
-    // REGLA: Los roles ADMIN y SUPER_ADMIN NO pueden ser borrados lógicamente
+    // Los roles ADMIN y SUPER_ADMIN NO pueden ser borrados lógicamente (ni por ellos mismos ni por otros)
     if (targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') {
       throw new UsersError('INSUFFICIENT_PERMISSIONS', 'No se puede hacer borrado lógico a un Administrador');
     }
