@@ -26,29 +26,6 @@ export class PrismaProductRepository implements ProductRepository {
     if (filters.brand) {
       where.brand = { equals: filters.brand, mode: 'insensitive' };
     }
-    if (filters.search) {
-      // Dividir la búsqueda en palabras individuales para mayor precisión
-      const words = filters.search.trim().split(/\s+/).filter(Boolean);
-      
-      if (words.length === 1) {
-        where.OR = [
-          { name: { contains: words[0], mode: 'insensitive' } },
-          { description: { contains: words[0], mode: 'insensitive' } },
-          { brand: { contains: words[0], mode: 'insensitive' } },
-        ];
-      } else {
-        // Para múltiples palabras, usar lógica AND: CADA palabra debe estar presente
-        // en al menos un campo (nombre, descripción o marca).
-        // Ejemplo: "procesador i9" → encuentra solo productos que contengan AMBAS palabras.
-        where.AND = words.map((word) => ({
-          OR: [
-            { name: { contains: word, mode: 'insensitive' } },
-            { description: { contains: word, mode: 'insensitive' } },
-            { brand: { contains: word, mode: 'insensitive' } },
-          ],
-        }));
-      }
-    }
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       where.price = {};
       if (filters.minPrice !== undefined) {
@@ -72,6 +49,45 @@ export class PrismaProductRepository implements ProductRepository {
           },
         },
       }));
+    }
+
+    // Motor de búsqueda con fallback inteligente: AND primero, OR si no hay resultados
+    if (filters.search) {
+      const words = filters.search.trim().split(/\s+/).filter(Boolean);
+
+      if (words.length === 1) {
+        where.OR = [
+          { name: { contains: words[0], mode: 'insensitive' } },
+          { description: { contains: words[0], mode: 'insensitive' } },
+          { brand: { contains: words[0], mode: 'insensitive' } },
+        ];
+      } else {
+        // Estrategia: Intentar AND primero (más preciso), luego OR como fallback
+        const andConditions = words.map((word) => ({
+          OR: [
+            { name: { contains: word, mode: 'insensitive' as const } },
+            { description: { contains: word, mode: 'insensitive' as const } },
+            { brand: { contains: word, mode: 'insensitive' as const } },
+          ],
+        }));
+
+        // Combinar con AND existentes (attributeFilters) si los hay
+        const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+        where.AND = [...existingAnd, ...andConditions];
+
+        // Consulta rápida para saber si AND devuelve resultados
+        const andCount = await this.prisma.product.count({ where });
+
+        if (andCount === 0) {
+          // Fallback: quitar las condiciones AND de búsqueda y usar OR (más amplio)
+          where.AND = existingAnd.length > 0 ? existingAnd : undefined;
+          where.OR = words.flatMap((word) => [
+            { name: { contains: word, mode: 'insensitive' as const } },
+            { description: { contains: word, mode: 'insensitive' as const } },
+            { brand: { contains: word, mode: 'insensitive' as const } },
+          ]);
+        }
+      }
     }
 
     const orderBy: Prisma.ProductOrderByWithRelationInput = {};

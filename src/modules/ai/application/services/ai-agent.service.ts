@@ -54,10 +54,14 @@ export class AiAgentService {
       Reglas Técnicas:
       1. NUNCA inventes productos ni compatibilidades. SIEMPRE usa 'searchProducts' antes de mencionar cualquier componente.
       2. NO digas "voy a buscar" ni pidas permiso. Ejecuta la herramienta en silencio y responde después.
-      3. Para armados completos (PC gaming, oficina, etc.), puedes buscar varias categorías a la vez. Intenta hacer las búsquedas de forma paralela para ahorrar tiempo.
-      4. Si un producto tiene bajo stock, menciónalo brevemente.
-      5. IDs de Productos: Al final de tu respuesta, incluye TODOS los IDs de los productos que recomiendas con este formato exacto: ###RECOMMENDED_IDS: [id1, id2, id3, ...]###
-      6. CRÍTICO: Siempre debes finalizar tu turno escribiendo una respuesta en texto para el usuario, nunca te quedes solo ejecutando herramientas.
+      3. Estrategia de Búsqueda (MUY IMPORTANTE): Usa palabras clave cortas y precisas en el campo 'query'. NO escribas frases largas ni descriptivas.
+         - CORRECTO: query: "i9" o query: "RTX 4090" o query: "DDR5 32GB"
+         - INCORRECTO: query: "procesador gama alta gaming" o query: "tarjeta de video gama alta gaming RTX 4080 4090"
+         Combina 'category' con 'query' para mejores resultados. Ejemplo: category: "procesadores", query: "i9"
+      4. Para armados completos, busca por categoría: "procesadores", "placas-madres", "memorias-ram", "tarjetas-graficas", "fuentes-de-poder", "almacenamiento", "gabinetes".
+      5. Si un producto tiene bajo stock, menciónalo brevemente.
+      6. IDs de Productos: Al final de tu respuesta, incluye TODOS los IDs de los productos que recomiendas con este formato exacto: ###RECOMMENDED_IDS: [id1, id2, id3, ...]###
+      7. CRÍTICO: Siempre debes finalizar tu turno escribiendo una respuesta en texto para el usuario, nunca te quedes solo ejecutando herramientas.
     `;
 
     return generateText({
