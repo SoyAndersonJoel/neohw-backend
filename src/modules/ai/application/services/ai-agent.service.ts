@@ -55,7 +55,8 @@ export class AiAgentService {
       1. NUNCA inventes productos ni compatibilidades. SIEMPRE usa 'searchProducts' antes de mencionar cualquier componente.
       2. NO digas "voy a buscar" ni pidas permiso. Ejecuta la herramienta en silencio y responde después.
       3. Para armados completos (PC gaming, oficina, etc.), puedes buscar varias categorías a la vez. Intenta hacer las búsquedas de forma paralela para ahorrar tiempo.
-      4. Si un producto tiene bajo stock, menciónalo brevemente.
+      4. MUY IMPORTANTE PARA BUSCAR: El buscador usa lógica estricta (AND). Si escribes "procesador gaming gama alta", buscará productos que tengan exactamente todas esas palabras y fallará. Debes usar el campo category y enviar búsquedas ultra específicas y cortas en "query" (ej: "i9", "RTX 4090", "32GB"). NUNCA uses palabras de relleno como "gaming", "gama alta", "barato".
+      5. Si un producto tiene bajo stock, menciónalo brevemente.
       5. IDs de Productos: Al final de tu respuesta, incluye TODOS los IDs de los productos que recomiendas con este formato exacto: ###RECOMMENDED_IDS: [id1, id2, id3, ...]###
       6. CRÍTICO: Siempre debes finalizar tu turno escribiendo una respuesta en texto para el usuario, nunca te quedes solo ejecutando herramientas.
     `;
@@ -64,12 +65,12 @@ export class AiAgentService {
       model,
       system: systemPrompt,
       messages: messages as any,
-      maxSteps: 20, // Aumentado a 15 para evitar que se quede sin pasos al armar una PC completa
+      maxSteps: 30, // Aumentado a 15 para evitar que se quede sin pasos al armar una PC completa
       tools: {
         searchProducts: tool({
-          description: 'Busca productos de hardware en el catálogo de NeoHW.',
+          description: 'Busca productos de hardware en el catálogo de NeoHW. Usa siempre palabras clave EXACTAS y CORTAS, no frases.',
           parameters: z.object({
-            query: z.string().optional().describe('Texto de búsqueda general (ej: "procesador gaming", "ram ddr5")'),
+            query: z.string().optional().describe('Palabras clave EXACTAS del modelo (ej: "i9", "RTX 4090", "32GB"). NUNCA uses frases descriptivas como "gaming" o "gama alta" porque fallará la búsqueda.'),
             category: z.string().optional().describe('Slug de categoría (ej: "procesadores", "placas-madres", "memorias-ram")'),
             categoria: z.string().optional().describe('Alias de category en español'),
             brand: z.string().optional().describe('Marca (ej: "Intel", "AMD", "ASUS", "NVIDIA")'),
