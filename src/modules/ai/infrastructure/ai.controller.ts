@@ -1,6 +1,9 @@
-import { Body, Controller, Post, Res, HttpStatus } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Post, Res, Req, HttpStatus } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AiAgentService } from '../application/services/ai-agent.service';
+
+// Mapa en memoria para limitar el uso de la IA a usuarios no registrados (ideal para el prototipo)
+const ipLimits = new Map<string, number>();
 
 @Controller('ai')
 export class AiController {
@@ -8,11 +11,31 @@ export class AiController {
 
   @Post('chat')
   async chat(
+    @Req() req: Request,
     @Body('messages') messages: Array<{ role: string; content: string }>,
     @Body('prompt') prompt: string,
     @Res() res: Response,
   ) {
     try {
+      // Validación de límite para usuarios no registrados (3 preguntas máximo)
+      const authHeader = req.headers.authorization;
+      const isLoggedIn = !!authHeader && authHeader.startsWith('Bearer ');
+
+      if (!isLoggedIn) {
+        // En Express detrás de proxies, req.ip suele funcionar si trust proxy está activo
+        const ip = req.ip || req.socket.remoteAddress || 'unknown';
+        const currentCount = ipLimits.get(ip) || 0;
+
+        if (currentCount >= 3) {
+          return res.status(HttpStatus.FORBIDDEN).json({
+            statusCode: HttpStatus.FORBIDDEN,
+            message: 'Has alcanzado el límite de 3 preguntas de prueba. ¡Regístrate o inicia sesión en NeoHW para seguir diseñando tu PC ideal!',
+            error: 'Forbidden',
+          });
+        }
+        ipLimits.set(ip, currentCount + 1);
+      }
+
       let messagesArray = messages;
 
       // Si el cliente envía 'prompt' en lugar de 'messages', lo adaptamos al formato esperado
