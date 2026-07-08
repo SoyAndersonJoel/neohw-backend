@@ -24,6 +24,7 @@ import {
   AccessRequestUser,
   RefreshRequestUser,
 } from './types/auth-request-user';
+import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { AuthErrorInterceptor } from './auth-error.interceptor';
 import { 
   LOGIN_USE_CASE, 
@@ -44,6 +45,7 @@ import type { RequestOtpUseCase } from '../application/use-cases/request-otp.use
 import type { ResetPasswordOtpUseCase } from '../application/use-cases/reset-password-otp.use-case';
 import type { VerifyAccountOtpUseCase } from '../application/use-cases/verify-account-otp.use-case';
 
+@ApiTags('Auth')
 @Controller('auth')
 @UseInterceptors(AuthErrorInterceptor)
 export class AuthController {
@@ -60,12 +62,18 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @ApiOperation({ summary: 'Registrar un nuevo usuario' })
+  @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente. Requiere verificación OTP.' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos o el correo ya existe.' })
   async register(@Body() registerDto: RegisterDto) {
     const result = await this.registerUseCase.execute(registerDto);
     return result;
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Iniciar sesión' })
+  @ApiResponse({ status: 200, description: 'Login exitoso', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -75,6 +83,7 @@ export class AuthController {
     return { accessToken: result.accessToken, user: result.user };
   }
 
+  @ApiExcludeEndpoint()
   @Post('social/google')
   async loginWithGoogle(
     @Body() dto: SocialLoginDto,
@@ -88,6 +97,7 @@ export class AuthController {
     return { accessToken: result.accessToken, user: result.user };
   }
 
+  @ApiExcludeEndpoint()
   @Post('social/facebook')
   async loginWithFacebook(
     @Body() dto: SocialLoginDto,
@@ -103,6 +113,10 @@ export class AuthController {
 
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Refrescar token de acceso', description: 'Requiere la cookie refresh_token' })
+  @ApiResponse({ status: 200, description: 'Token refrescado exitosamente', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Refresh token inválido o expirado' })
   async refresh(
     @Req() req: Request & { user: RefreshRequestUser },
     @Res({ passthrough: true }) res: Response,
@@ -118,6 +132,9 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard('jwt-refresh'))
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Cerrar sesión', description: 'Revoca el token actual y limpia la cookie' })
+  @ApiResponse({ status: 200, description: 'Cierre de sesión exitoso' })
   async logout(
     @Req() req: Request & { user: RefreshRequestUser },
     @Res({ passthrough: true }) res: Response,
@@ -131,6 +148,10 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener perfil del usuario actual' })
+  @ApiResponse({ status: 200, description: 'Perfil obtenido exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
   async me(
     @Req() req: Request & { user: AccessRequestUser },
   ): Promise<{ user: AccessRequestUser }> {
@@ -138,16 +159,24 @@ export class AuthController {
   }
 
   @Post('request-otp')
+  @ApiOperation({ summary: 'Solicitar código OTP para recuperación de contraseña' })
+  @ApiResponse({ status: 200, description: 'Correo con OTP enviado' })
   async requestOtp(@Body() dto: RequestOtpDto) {
     return this.requestOtpUseCase.execute(dto);
   }
 
   @Post('reset-password')
+  @ApiOperation({ summary: 'Restablecer contraseña usando código OTP' })
+  @ApiResponse({ status: 200, description: 'Contraseña restablecida exitosamente' })
+  @ApiResponse({ status: 400, description: 'OTP inválido o expirado' })
   async resetPassword(@Body() dto: ResetPasswordOtpDto) {
     return this.resetPasswordOtpUseCase.execute(dto);
   }
 
   @Post('verify-account')
+  @ApiOperation({ summary: 'Verificar cuenta de usuario recién registrado usando OTP' })
+  @ApiResponse({ status: 200, description: 'Cuenta verificada exitosamente', type: AuthResponseDto })
+  @ApiResponse({ status: 400, description: 'OTP inválido o expirado' })
   async verifyAccount(
     @Body() dto: VerifyAccountOtpDto,
     @Res({ passthrough: true }) res: Response,

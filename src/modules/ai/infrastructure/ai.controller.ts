@@ -1,15 +1,40 @@
 import { Body, Controller, Post, Res, Req, HttpStatus } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AiAgentService } from '../application/services/ai-agent.service';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 // Mapa en memoria para limitar el uso de la IA a usuarios no registrados (ideal para el prototipo)
 const ipLimits = new Map<string, number>();
 
+@ApiTags('AI Assistant')
 @Controller('ai')
 export class AiController {
   constructor(private readonly aiAgentService: AiAgentService) {}
 
   @Post('chat')
+  @ApiOperation({ summary: 'Chat con el asistente de IA para recomendaciones de hardware' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        messages: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              role: { type: 'string', example: 'user' },
+              content: { type: 'string', example: 'Quiero armar una PC gamer con presupuesto de 1500 USD' },
+            },
+          },
+        },
+        prompt: { type: 'string', description: 'Alternativa a messages, un solo mensaje de texto' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Respuesta del asistente con recomendaciones y productos' })
+  @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
+  @ApiResponse({ status: 403, description: 'Límite de preguntas para usuarios no registrados alcanzado' })
+  @ApiResponse({ status: 429, description: 'IA temporalmente saturada (rate limit)' })
   async chat(
     @Req() req: Request,
     @Body('messages') messages: Array<{ role: string; content: string }>,

@@ -33,6 +33,9 @@ import { UpdateAttributeUseCase } from '../application/use-cases/update-attribut
 import { AssignAttributeToCategoryUseCase } from '../application/use-cases/assign-attribute-to-category.use-case';
 import type { AttributeRepository } from '../domain/interfaces/attribute.repository';
 
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+
+@ApiTags('Attributes')
 @Controller()
 @UseInterceptors(AttributesErrorInterceptor)
 export class AttributesController {
@@ -54,18 +57,27 @@ export class AttributesController {
   @Post('attributes')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Crear un atributo (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 201, description: 'Atributo creado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async create(@Body() dto: CreateAttributeDto) {
     const attribute = await this.createAttributeUseCase.execute(dto);
     return { message: 'Atributo creado exitosamente', attribute };
   }
 
   @Get('attributes')
+  @ApiOperation({ summary: 'Obtener todos los atributos' })
+  @ApiResponse({ status: 200, description: 'Lista de atributos obtenida' })
   async findAll() {
     const attributes = await this.findAllAttributesUseCase.execute();
     return { data: attributes, total: attributes.length };
   }
 
   @Get('attributes/:id')
+  @ApiOperation({ summary: 'Obtener un atributo por ID' })
+  @ApiResponse({ status: 200, description: 'Atributo encontrado' })
+  @ApiResponse({ status: 404, description: 'Atributo no encontrado' })
   async findById(@Param('id') id: string) {
     const attribute = await this.attributeRepository.findById(id);
     if (!attribute) {
@@ -77,6 +89,10 @@ export class AttributesController {
   @Patch('attributes/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar un atributo (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Atributo actualizado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async update(@Param('id') id: string, @Body() dto: UpdateAttributeDto) {
     const attribute = await this.updateAttributeUseCase.execute({ id, ...dto });
     return { message: 'Atributo actualizado exitosamente', attribute };
@@ -85,6 +101,10 @@ export class AttributesController {
   @Delete('attributes/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar un atributo (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Atributo eliminado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async delete(@Param('id') id: string) {
     await this.attributeRepository.delete(id);
     return { message: 'Atributo eliminado exitosamente' };
@@ -93,6 +113,8 @@ export class AttributesController {
   // ─── Category-Attribute endpoints ─────────────────────────
 
   @Get('categories/:id/attributes')
+  @ApiOperation({ summary: 'Obtener atributos asignados a una categoría' })
+  @ApiResponse({ status: 200, description: 'Lista de atributos obtenida' })
   async findByCategoryId(@Param('id') categoryId: string) {
     const attributes = await this.findAttributesByCategoryUseCase.execute(categoryId);
     return { data: attributes, total: attributes.length };
@@ -101,6 +123,10 @@ export class AttributesController {
   @Post('categories/:id/attributes')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Asignar un atributo a una categoría (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 201, description: 'Atributo asignado a la categoría' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async assignToCategory(
     @Param('id') categoryId: string,
     @Body() dto: AssignCategoryAttributeDto,
@@ -112,6 +138,10 @@ export class AttributesController {
   @Delete('categories/:categoryId/attributes/:attributeId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Desasignar un atributo de una categoría (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Atributo desasignado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async removeFromCategory(
     @Param('categoryId') categoryId: string,
     @Param('attributeId') attributeId: string,

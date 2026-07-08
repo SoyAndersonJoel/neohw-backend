@@ -30,6 +30,9 @@ import { FindProductAttributesUseCase } from '../application/use-cases/find-prod
 import { FindProductByIdUseCase } from '../../products/application/use-cases/find-product-by-id.use-case';
 import type { AccessRequestUser } from '../../auth/infrastructure/types/auth-request-user';
 
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+
+@ApiTags('Product Attributes')
 @Controller('products/:productId/attributes')
 @UseInterceptors(ProductAttributesErrorInterceptor)
 export class ProductAttributesController {
@@ -45,6 +48,9 @@ export class ProductAttributesController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'Obtener los atributos de un producto' })
+  @ApiResponse({ status: 200, description: 'Atributos obtenidos exitosamente' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async findAll(@Param('productId') productId: string) {
     const attributes = await this.findProductAttributesUseCase.execute(productId);
     return { productId, attributes, total: attributes.length };
@@ -53,6 +59,11 @@ export class ProductAttributesController {
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Asignar valores de atributos a un producto' })
+  @ApiResponse({ status: 201, description: 'Atributos asignados exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async set(
     @Param('productId') productId: string,
     @Body() dto: SetProductAttributesDto,
@@ -76,6 +87,11 @@ export class ProductAttributesController {
   @Patch()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar los valores de los atributos de un producto' })
+  @ApiResponse({ status: 200, description: 'Atributos actualizados exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async update(
     @Param('productId') productId: string,
     @Body() dto: SetProductAttributesDto,

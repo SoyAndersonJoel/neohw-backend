@@ -33,6 +33,10 @@ import { FindUserByIdUseCase } from '../application/use-cases/find-user-by-id.us
 import type { AccessRequestUser } from '../../auth/infrastructure/types/auth-request-user';
 import { toPublicUser } from '../../auth/application/auth-result';
 
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 @UseInterceptors(UsersErrorInterceptor)
 @UseGuards(AuthGuard('jwt'))
@@ -52,6 +56,10 @@ export class UsersController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'Obtener todos los usuarios (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Lista de usuarios obtenida exitosamente' })
+  @ApiQuery({ name: 'page', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: String })
   async findAll(@Query('page') page: string = '1', @Query('limit') limit: string = '10') {
     const pageNumber = Math.max(1, parseInt(page, 10) || 1);
     const limitNumber = Math.max(1, parseInt(limit, 10) || 10);
@@ -65,6 +73,8 @@ export class UsersController {
   }
 
   @Get('me')
+  @ApiOperation({ summary: 'Obtener el perfil del usuario actual (Me)' })
+  @ApiResponse({ status: 200, description: 'Usuario encontrado' })
   async getMyProfile(@Req() req: Request & { user: AccessRequestUser }) {
     const user = await this.findUserByIdUseCase.execute(req.user.id);
     if (!user) {
@@ -76,6 +86,9 @@ export class UsersController {
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'Buscar usuario por ID (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Usuario encontrado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   async findById(@Param('id') id: string) {
     const user = await this.findUserByIdUseCase.execute(id);
     if (!user) {
@@ -85,6 +98,8 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar perfil de usuario' })
+  @ApiResponse({ status: 200, description: 'Perfil actualizado exitosamente' })
   async updateProfile(
     @Param('id') targetUserId: string,
     @Body() dto: UpdateUserDto,
@@ -109,6 +124,8 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Eliminar usuario lógicamente' })
+  @ApiResponse({ status: 200, description: 'Usuario desactivado exitosamente' })
   async softDelete(
     @Param('id') targetUserId: string,
     @Req() req: Request & { user: AccessRequestUser },
@@ -130,6 +147,9 @@ export class UsersController {
   @Patch(':id/role')
   @UseGuards(RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'Cambiar el rol de un usuario (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Rol actualizado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async changeRole(
     @Param('id') targetUserId: string,
     @Body() dto: ChangeRoleDto,

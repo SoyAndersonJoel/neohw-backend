@@ -29,6 +29,10 @@ const multerOptions = {
   },
 };
 
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+
+@ApiTags('Orders')
+@ApiBearerAuth()
 @Controller('orders')
 export class OrdersController {
   constructor(
@@ -48,6 +52,9 @@ export class OrdersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post()
+  @ApiOperation({ summary: 'Crear un nuevo pedido directamente con productos' })
+  @ApiResponse({ status: 201, description: 'Pedido creado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Error en la solicitud' })
   async createOrder(@Request() req: any, @Body() dto: CreateOrderDto) {
     const userId = req.user.id;
     const order = await this.createOrderUseCase.execute(userId, dto);
@@ -60,6 +67,9 @@ export class OrdersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('from-cart')
+  @ApiOperation({ summary: 'Crear un pedido a partir del carrito de compras' })
+  @ApiResponse({ status: 201, description: 'Pedido creado exitosamente desde el carrito' })
+  @ApiResponse({ status: 400, description: 'El carrito está vacío o hubo un error' })
   async createOrderFromCart(@Request() req: any, @Body() dto: CreateOrderFromCartDto) {
     const userId = req.user.id;
     const order = await this.createOrderFromCartUseCase.execute(userId, dto);
@@ -72,6 +82,10 @@ export class OrdersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('my-orders')
+  @ApiOperation({ summary: 'Obtener los pedidos del usuario actual' })
+  @ApiResponse({ status: 200, description: 'Lista de pedidos obtenida' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getMyOrders(
     @Request() req: any,
     @Query('page') page?: number,
@@ -87,6 +101,11 @@ export class OrdersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
   @Get()
+  @ApiOperation({ summary: 'Obtener todos los pedidos (Solo ADMIN/SELLER)' })
+  @ApiResponse({ status: 200, description: 'Lista de pedidos obtenida' })
+  @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getOrders(
     @Request() req: any,
     @Query('status') status?: OrderStatus,
@@ -105,6 +124,9 @@ export class OrdersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
   @Patch(':id/status')
+  @ApiOperation({ summary: 'Actualizar el estado de un pedido (Solo ADMIN/SELLER)' })
+  @ApiResponse({ status: 200, description: 'Estado actualizado' })
+  @ApiResponse({ status: 400, description: 'Faltan documentos requeridos para el estado' })
   async updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateOrderStatusDto,
@@ -120,6 +142,24 @@ export class OrdersController {
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER)
   @Post(':id/documents')
   @UseInterceptors(FileInterceptor('file', multerOptions))
+  @ApiOperation({ summary: 'Subir documentos adjuntos a un pedido (ej. Guía de remisión) (Solo ADMIN/SELLER)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        documentType: {
+          type: 'string',
+          example: 'SHIPPING_LABEL',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Documento subido' })
   async uploadDocument(
     @Param('id') id: string,
     @Body('documentType') documentType: string,

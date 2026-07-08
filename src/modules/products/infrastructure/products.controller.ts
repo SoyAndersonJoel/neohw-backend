@@ -35,6 +35,9 @@ import { UpdateProductUseCase } from '../application/use-cases/update-product.us
 import { DeleteProductUseCase } from '../application/use-cases/delete-product.use-case';
 import type { AccessRequestUser } from '../../auth/infrastructure/types/auth-request-user';
 
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+
+@ApiTags('Products')
 @Controller('products')
 @UseInterceptors(ProductsErrorInterceptor)
 export class ProductsController {
@@ -60,6 +63,10 @@ export class ProductsController {
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Crear un nuevo producto (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 201, description: 'Producto creado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async create(
     @Body() dto: CreateProductDto,
     @Req() req: Request & { user: AccessRequestUser },
@@ -72,6 +79,17 @@ export class ProductsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Obtener lista de productos con filtros y paginación' })
+  @ApiResponse({ status: 200, description: 'Productos obtenidos exitosamente' })
+  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'brand', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'minPrice', required: false, type: Number })
+  @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'sort', required: false, type: String })
+  @ApiQuery({ name: 'order', required: false, type: String, enum: ['asc', 'desc'] })
   async findAll(@Query() query: QueryProductsDto, @Req() req: Request) {
     // Extraer filtros dinámicos de atributos (query params desconocidos)
     const attributeFilters: Record<string, string> = {};
@@ -100,6 +118,9 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener un producto por ID' })
+  @ApiResponse({ status: 200, description: 'Producto encontrado' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async findById(@Param('id') id: string) {
     const product = await this.findProductByIdUseCase.execute(id);
     return { product };
@@ -108,6 +129,11 @@ export class ProductsController {
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar un producto (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Producto actualizado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateProductDto,
@@ -125,6 +151,11 @@ export class ProductsController {
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar/desactivar un producto (Solo ADMIN/SUPER_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Producto desactivado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async delete(@Param('id') id: string) {
     const product = await this.deleteProductUseCase.execute(id);
     return { message: 'Producto desactivado exitosamente', product };

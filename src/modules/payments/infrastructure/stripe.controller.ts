@@ -4,6 +4,9 @@ import { Request } from 'express';
 import { StripeService } from '../application/services/stripe.service';
 import { ProcessWebhookUseCase } from '../application/use-cases/process-webhook.use-case';
 
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiBody, ApiHeaders } from '@nestjs/swagger';
+
+@ApiTags('Stripe Payments')
 @Controller('payments/stripe')
 export class StripeController {
   constructor(
@@ -12,6 +15,11 @@ export class StripeController {
   ) {}
 
   @Post('create-checkout-session')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Crear una sesión de pago en Stripe para un pedido' })
+  @ApiResponse({ status: 201, description: 'Sesión creada exitosamente' })
+  @ApiResponse({ status: 400, description: 'Order ID requerido' })
+  @ApiBody({ schema: { type: 'object', properties: { orderId: { type: 'string' } } } })
   async createSession(@Body('orderId') orderId: string) {
     if (!orderId) {
       throw new BadRequestException('El orderId es requerido');
@@ -26,6 +34,12 @@ export class StripeController {
   }
 
   @Post('webhook')
+  @ApiOperation({ summary: 'Stripe Webhook - Recibe eventos de pago de Stripe' })
+  @ApiResponse({ status: 200, description: 'Webhook recibido y procesado' })
+  @ApiResponse({ status: 400, description: 'Firma de Stripe inválida o cuerpo faltante' })
+  @ApiHeaders([
+    { name: 'stripe-signature', description: 'Firma generada por Stripe', required: true }
+  ])
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
     @Req() req: RawBodyRequest<Request>,
