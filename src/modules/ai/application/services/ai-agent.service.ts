@@ -56,6 +56,7 @@ export class AiAgentService {
       2. ESTÁ ESTRICTAMENTE PROHIBIDO mencionar nombres, modelos o características sin haber ejecutado ANTES la herramienta 'searchProducts'.
       CRÍTICO: NO digas "Voy a buscar", NO pidas permiso para buscar, y NO uses frases de relleno antes de buscar. ¡SIMPLEMENTE EJECUTA LA HERRAMIENTA EN SILENCIO DE INMEDIATO! Redacta tu respuesta SOLO DESPUÉS de ver los resultados de la base de datos de NeoHW.
       3. Si la herramienta 'searchProducts' devuelve que un producto tiene bajo stock, menciónale al cliente que quedan pocas unidades para generar sentido de oportunidad.
+      5. IDs de Productos Recomendados: Si la herramienta te devuelve productos y tú se los recomiendas directamente al cliente, DEBES incluir al final de tu respuesta los UUIDs (solo los IDs) de esos productos usando este formato exacto: ###RECOMMENDED_IDS: [id1, id2]###
     `;
 
     return generateText({

@@ -40,10 +40,25 @@ export class AiController {
         fullText = result.text || 'He revisado el inventario pero no he podido formular una respuesta en este momento.';
       }
 
+      // Extraer IDs recomendados
+      let recommendedProductIds: string[] = [];
+      const idsRegex = /###RECOMMENDED_IDS:\s*\[(.*?)\]###/;
+      const match = fullText.match(idsRegex);
+
+      if (match) {
+        recommendedProductIds = match[1]
+          .split(',')
+          .map((id: string) => id.trim().replace(/['"]/g, ''))
+          .filter((id: string) => id.length > 0);
+          
+        fullText = fullText.replace(idsRegex, '').trim();
+      }
+
       // Respuesta JSON limpia y predecible para cualquier cliente (Insomnia, Postman, Frontend)
       return res.status(HttpStatus.OK).json({
         role: 'assistant',
         content: fullText,
+        recommendedProductIds,
       });
     } catch (error: any) {
       console.error('Error en el chat con la IA:', error);
