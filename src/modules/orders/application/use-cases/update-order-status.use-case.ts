@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { OrderStatus } from '../../../../generated/prisma/enums';
+import { NotificationsService } from '../../../notifications/application/services/notifications.service';
 
 @Injectable()
 export class UpdateOrderStatusUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async execute(orderId: string, status: OrderStatus) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { documents: true },
+      include: { documents: true, user: true },
     });
 
     if (!order) {
@@ -52,6 +56,27 @@ export class UpdateOrderStatusUseCase {
       where: { id: orderId },
       data: { status },
     });
+
+    // Enviar notificaciones de correo según el nuevo estado
+    try {
+      if (status === 'SHIPPED') {
+        const addressObj = typeof order.shippingAddress === 'string' ? JSON.parse(order.shippingAddress) : order.shippingAddress;
+        const formattedAddress = addressObj?.street ? `${addressObj.street}, ${addressObj.city || ''}` : 'Dirección principal';
+        
+        await this.notificationsService.sendOrderShippedEmail(order.user.email, {
+          firstName: order.user.firstName || 'Cliente',
+          trackingCode: order.trackingCode || order.id,
+          shippingAddress: formattedAddress,
+        });
+      } else if (status === 'DELIVERED') {
+        await this.notificationsService.sendOrderDeliveredEmail(order.user.email, {
+          firstName: order.user.firstName || 'Cliente',
+          trackingCode: order.trackingCode || order.id,
+        });
+      }
+    } catch (error) {
+      console.error(`Error enviando notificación para pedido ${orderId}:`, error);
+    }
 
     return updatedOrder;
   }
