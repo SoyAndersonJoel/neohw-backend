@@ -68,6 +68,7 @@ export class AiAgentService {
         searchProducts: tool({
           description: 'Busca productos de hardware en el catálogo de NeoHW.',
           parameters: z.object({
+            query: z.string().optional().describe('Texto de búsqueda general (ej: "procesador gaming", "ram ddr5")'),
             category: z.string().optional().describe('Slug de categoría (ej: "procesadores", "placas-madres", "memorias-ram")'),
             categoria: z.string().optional().describe('Alias de category en español'),
             brand: z.string().optional().describe('Marca (ej: "Intel", "AMD", "ASUS", "NVIDIA")'),
@@ -92,6 +93,7 @@ export class AiAgentService {
             // Fusión de términos de búsqueda para no perder precisión en el catálogo
             const searchParts = [
               args.search,
+              args.query,
               args.model,
               args.modelo,
               args.ligne,
