@@ -19,6 +19,7 @@ export class PrismaProductRepository implements ProductRepository {
     const skip = (page - 1) * limit;
 
     const where: Prisma.ProductWhereInput = { isActive: true };
+    const andConditions: Prisma.ProductWhereInput[] = [];
 
     if (filters.category) {
       where.category = { slug: filters.category };
@@ -27,23 +28,18 @@ export class PrismaProductRepository implements ProductRepository {
       where.brand = { equals: filters.brand, mode: 'insensitive' };
     }
     if (filters.search) {
-      // Dividir la búsqueda en palabras individuales para mayor flexibilidad
+      // Dividir la búsqueda en palabras individuales y requerir que TODAS estén presentes (AND lógico)
       const words = filters.search.trim().split(/\s+/).filter(Boolean);
       
-      if (words.length === 1) {
-        where.OR = [
-          { name: { contains: words[0], mode: 'insensitive' } },
-          { description: { contains: words[0], mode: 'insensitive' } },
-          { brand: { contains: words[0], mode: 'insensitive' } },
-        ];
-      } else {
-        // Para múltiples palabras, buscar productos que contengan CUALQUIERA de las palabras
-        where.OR = words.flatMap((word) => [
-          { name: { contains: word, mode: 'insensitive' } },
-          { description: { contains: word, mode: 'insensitive' } },
-          { brand: { contains: word, mode: 'insensitive' } },
-        ]);
-      }
+      words.forEach((word) => {
+        andConditions.push({
+          OR: [
+            { name: { contains: word, mode: 'insensitive' } },
+            { description: { contains: word, mode: 'insensitive' } },
+            { brand: { contains: word, mode: 'insensitive' } },
+          ],
+        });
+      });
     }
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       where.price = {};
@@ -60,14 +56,20 @@ export class PrismaProductRepository implements ProductRepository {
 
     // Filtros dinámicos por atributos
     if (filters.attributeFilters && Object.keys(filters.attributeFilters).length > 0) {
-      where.AND = Object.entries(filters.attributeFilters).map(([slug, value]) => ({
-        attributes: {
-          some: {
-            attribute: { slug },
-            value: { equals: value, mode: 'insensitive' as const },
+      Object.entries(filters.attributeFilters).forEach(([slug, value]) => {
+        andConditions.push({
+          attributes: {
+            some: {
+              attribute: { slug },
+              value: { equals: value, mode: 'insensitive' as const },
+            },
           },
-        },
-      }));
+        });
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const orderBy: Prisma.ProductOrderByWithRelationInput = {};
