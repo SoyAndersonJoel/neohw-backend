@@ -8,6 +8,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.enableCors();
+  app.setGlobalPrefix('api/v1');
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

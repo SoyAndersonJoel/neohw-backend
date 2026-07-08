@@ -27,11 +27,23 @@ export class PrismaProductRepository implements ProductRepository {
       where.brand = { equals: filters.brand, mode: 'insensitive' };
     }
     if (filters.search) {
-      where.OR = [
-        { name: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
-        { brand: { contains: filters.search, mode: 'insensitive' } },
-      ];
+      // Dividir la búsqueda en palabras individuales para mayor flexibilidad
+      const words = filters.search.trim().split(/\s+/).filter(Boolean);
+      
+      if (words.length === 1) {
+        where.OR = [
+          { name: { contains: words[0], mode: 'insensitive' } },
+          { description: { contains: words[0], mode: 'insensitive' } },
+          { brand: { contains: words[0], mode: 'insensitive' } },
+        ];
+      } else {
+        // Para múltiples palabras, buscar productos que contengan CUALQUIERA de las palabras
+        where.OR = words.flatMap((word) => [
+          { name: { contains: word, mode: 'insensitive' } },
+          { description: { contains: word, mode: 'insensitive' } },
+          { brand: { contains: word, mode: 'insensitive' } },
+        ]);
+      }
     }
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       where.price = {};

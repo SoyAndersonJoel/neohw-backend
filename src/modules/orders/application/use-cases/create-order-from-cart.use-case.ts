@@ -22,7 +22,7 @@ export class CreateOrderFromCartUseCase {
         throw new BadRequestException('El carrito está vacío. Agrega productos antes de crear un pedido.');
       }
 
-      let totalAmount = 0;
+      let subtotal = 0;
       const orderItemsData = [];
 
       // 2. Validar stock y preparar items del pedido
@@ -48,7 +48,7 @@ export class CreateOrderFromCartUseCase {
         });
 
         const lineTotal = Number(product.price) * cartItem.quantity;
-        totalAmount += lineTotal;
+        subtotal += lineTotal;
 
         orderItemsData.push({
           productId: product.id,
@@ -57,10 +57,23 @@ export class CreateOrderFromCartUseCase {
         });
       }
 
+      // Cálculo de IVA
+      const taxRate = parseFloat(process.env.TAX_RATE || '0.15');
+      const taxAmount = subtotal * taxRate;
+      const totalAmount = subtotal + taxAmount;
+
+      // Generación de Código de Rastreo
+      const year = new Date().getFullYear();
+      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const trackingCode = `HW-${year}-${randomPart}`;
+
       // 4. Crear la orden
       const order = await tx.order.create({
         data: {
+          trackingCode,
           userId,
+          subtotal,
+          taxAmount,
           totalAmount,
           shippingAddress: dto.shippingAddress,
           status: 'PENDING_PAYMENT',
