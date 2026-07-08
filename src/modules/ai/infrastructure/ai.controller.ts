@@ -59,7 +59,7 @@ export class AiController {
       // forzamos manualmente un segundo paso enviándole el historial con los resultados de las herramientas.
       if (!fullText && result.response?.messages?.length > 0) {
         const historyWithTools = [...messagesArray, ...result.response.messages];
-        result = await this.aiAgentService.chat(historyWithTools);
+        result = await this.aiAgentService.chatTextOnly(historyWithTools);
         fullText = result.text || 'He revisado el inventario pero no he podido formular una respuesta en este momento.';
       }
 

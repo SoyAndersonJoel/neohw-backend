@@ -166,4 +166,16 @@ export class AiAgentService {
       } as any
     } as any);
   }
+
+  // Método de reintento: fuerza a la IA a generar texto sin herramientas
+  async chatTextOnly(messages: any[]): Promise<any> {
+    const model = this.google('gemini-3.1-flash-lite');
+
+    return generateText({
+      model,
+      system: `Eres Neo, el asesor de hardware de NeoHW. Genera una respuesta útil basándote en los resultados de las herramientas que ya ejecutaste. Sé breve, usa Markdown y tablas. Incluye ###RECOMMENDED_IDS: [id1, id2, ...]### al final con los IDs de productos que recomiendes.`,
+      messages: messages as any,
+      maxSteps: 1,
+    } as any);
+  }
 }
