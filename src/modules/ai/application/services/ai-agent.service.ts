@@ -64,7 +64,7 @@ export class AiAgentService {
       model,
       system: systemPrompt,
       messages: messages as any,
-      maxSteps: 15, // Aumentado a 15 para evitar que se quede sin pasos al armar una PC completa
+      maxSteps: 20, // Aumentado a 15 para evitar que se quede sin pasos al armar una PC completa
       tools: {
         searchProducts: tool({
           description: 'Busca productos de hardware en el catálogo de NeoHW.',
