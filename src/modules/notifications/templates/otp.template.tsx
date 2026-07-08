@@ -23,33 +23,46 @@ export const OtpEmail = ({ validationCode = '123456', purpose = 'Verificación d
       <Preview>Tu código de seguridad de NeoHW</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Section style={logoContainer}>
+          {/* ── Header ── */}
+          <Section style={headerSection}>
             <Img
               src="https://res.cloudinary.com/dkmqkhlhf/image/upload/v1781135156/logoHW-removebg-preview_bt0mwm.png"
-              width="180"
+              width="140"
               alt="NeoHW Logo"
               style={logo}
             />
           </Section>
 
-          <Heading style={h1}>Código de Seguridad</Heading>
-          
-          <Text style={text}>
-            Has solicitado un código para: <strong>{purpose}</strong>.
-          </Text>
+          {/* ── Body ── */}
+          <Section style={bodySection}>
+            <Text style={emoji}>🔐</Text>
+            <Heading style={h1}>Código de Seguridad</Heading>
+            
+            <Text style={text}>
+              Has solicitado un código para: <strong>{purpose}</strong>.
+            </Text>
 
-          <Section style={codeContainer}>
-            <Text style={code}>{validationCode}</Text>
+            <Section style={codeContainer}>
+              <Text style={code}>{validationCode}</Text>
+            </Section>
+
+            <Text style={text}>
+              Ingresa este código en la aplicación para continuar. Este código expirará en 15 minutos.
+            </Text>
+
+            <Section style={warningBox}>
+              <Text style={warningText}>
+                ⚠️ Si no solicitaste este código, puedes ignorar este correo de forma segura.
+              </Text>
+            </Section>
           </Section>
 
-          <Text style={text}>
-            Ingresa este código en la aplicación para continuar. Este código expirará en 15 minutos.
-            Si no solicitaste este código, puedes ignorar este correo de forma segura.
-          </Text>
-
-          <Text style={footer}>
-            © {new Date().getFullYear()} NeoHW. Todos los derechos reservados.
-          </Text>
+          {/* ── Footer ── */}
+          <Section style={footerSection}>
+            <Text style={footer}>
+              © {new Date().getFullYear()} NeoHW. Todos los derechos reservados.
+            </Text>
+          </Section>
         </Container>
       </Body>
     </Html>
@@ -58,24 +71,27 @@ export const OtpEmail = ({ validationCode = '123456', purpose = 'Verificación d
 
 export default OtpEmail;
 
+// ── Estilos ──────────────────────────────────────────────
+
 const main = {
-  backgroundColor: '#ffffff', // Fondo blanco
-  fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  backgroundColor: '#f4f4f5',
+  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  padding: '20px 0',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '20px 0 48px',
-  width: '560px',
-  backgroundColor: '#1E293B', // Azul oscuro
-  borderRadius: '8px',
+  width: '100%',
+  maxWidth: '640px',
+  backgroundColor: '#ffffff',
+  borderRadius: '12px',
   overflow: 'hidden',
-  marginTop: '40px',
+  border: '1px solid #e4e4e7',
 };
 
-const logoContainer = {
-  padding: '30px 20px',
+const headerSection = {
+  backgroundColor: '#0f172a',
+  padding: '28px 20px',
   textAlign: 'center' as const,
 };
 
@@ -83,35 +99,45 @@ const logo = {
   margin: '0 auto',
 };
 
+const bodySection = {
+  padding: '32px 28px 20px',
+};
+
+const emoji = {
+  fontSize: '40px',
+  textAlign: 'center' as const,
+  margin: '0 0 8px',
+};
+
 const h1 = {
-  color: '#00f0ff', // Celeste neón
-  fontSize: '24px',
-  fontWeight: '600',
-  lineHeight: '40px',
-  margin: '0 0 20px',
+  color: '#0f172a',
+  fontSize: '22px',
+  fontWeight: '700',
+  lineHeight: '30px',
+  margin: '0 0 12px',
   textAlign: 'center' as const,
 };
 
 const text = {
-  color: '#cbd5e1', // Gris claro
-  fontSize: '16px',
-  lineHeight: '26px',
-  padding: '0 40px',
+  color: '#475569',
+  fontSize: '14px',
+  lineHeight: '22px',
   textAlign: 'center' as const,
+  margin: '0 0 20px',
 };
 
 const codeContainer = {
-  background: 'rgba(0, 240, 255, 0.1)',
-  border: '1px solid #00f0ff',
-  borderRadius: '4px',
-  margin: '16px auto 24px',
+  backgroundColor: '#f0fdfa',
+  border: '2px dashed #0891b2',
+  borderRadius: '8px',
+  margin: '0 auto 24px',
   padding: '20px',
-  width: '280px',
+  maxWidth: '280px',
   textAlign: 'center' as const,
 };
 
 const code = {
-  color: '#00f0ff',
+  color: '#0891b2',
   fontSize: '36px',
   fontWeight: '700',
   letterSpacing: '8px',
@@ -119,10 +145,30 @@ const code = {
   margin: '0',
 };
 
-const footer = {
-  color: '#64748b',
-  fontSize: '12px',
-  lineHeight: '24px',
-  marginTop: '48px',
+const warningBox = {
+  backgroundColor: '#fffbeb',
+  borderRadius: '8px',
+  border: '1px solid #fde68a',
+  padding: '14px 20px',
+  margin: '0',
+};
+
+const warningText = {
+  color: '#92400e',
+  fontSize: '13px',
+  lineHeight: '20px',
+  margin: '0',
+};
+
+const footerSection = {
+  backgroundColor: '#f8fafc',
+  borderTop: '1px solid #e2e8f0',
+  padding: '20px',
   textAlign: 'center' as const,
+};
+
+const footer = {
+  color: '#94a3b8',
+  fontSize: '12px',
+  margin: '0',
 };

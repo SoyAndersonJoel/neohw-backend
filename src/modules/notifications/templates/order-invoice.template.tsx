@@ -39,72 +39,96 @@ export const OrderInvoiceEmail = ({
       <Preview>Recibo de tu compra en NeoHW</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Section style={logoContainer}>
+          {/* ── Header con logo ── */}
+          <Section style={headerSection}>
             <Img
               src="https://res.cloudinary.com/dkmqkhlhf/image/upload/v1781135156/logoHW-removebg-preview_bt0mwm.png"
-              width="150"
+              width="140"
               alt="NeoHW Logo"
               style={logo}
             />
           </Section>
 
-          <Heading style={h1}>¡Gracias por tu compra, {firstName}!</Heading>
-          
-          <Text style={text}>
-            Hemos recibido tu pago exitosamente. Aquí tienes el recibo y los detalles de tu pedido.
-          </Text>
-
-          <Section style={orderInfoBox}>
-            <Text style={orderInfoText}>
-              <strong>Código de Rastreo:</strong> {trackingCode}
+          {/* ── Saludo ── */}
+          <Section style={bodySection}>
+            <Heading style={h1}>¡Gracias por tu compra, {firstName}!</Heading>
+            
+            <Text style={text}>
+              Hemos recibido tu pago exitosamente. Aquí tienes el recibo y los detalles de tu pedido.
             </Text>
-            <Text style={orderInfoText}>
-              <strong>Dirección de Envío:</strong> {shippingAddress}
-            </Text>
-          </Section>
 
-          <Hr style={divider} />
-          
-          <Heading as="h2" style={h2}>Detalles del Pedido</Heading>
-
-          <Section style={tableSection}>
-            {items.map((item, index) => (
-              <Row key={index} style={itemRow}>
-                <Column style={itemDetailsColumn}>
-                  <Text style={itemName}>{item.name}</Text>
-                  <Text style={itemQty}>Cantidad: {item.quantity}</Text>
-                </Column>
-                <Column style={itemPriceColumn}>
-                  <Text style={itemPrice}>${item.price}</Text>
+            {/* ── Info del pedido ── */}
+            <Section style={orderInfoBox}>
+              <Row>
+                <Column>
+                  <Text style={orderInfoLabel}>Código de Rastreo</Text>
+                  <Text style={orderInfoValue}>{trackingCode}</Text>
                 </Column>
               </Row>
-            ))}
+              <Row>
+                <Column>
+                  <Text style={orderInfoLabel}>Dirección de Envío</Text>
+                  <Text style={orderInfoValue}>{shippingAddress}</Text>
+                </Column>
+              </Row>
+            </Section>
+
+            <Hr style={divider} />
+            
+            <Heading as="h2" style={h2}>Detalles del Pedido</Heading>
+
+            {/* ── Cabecera de tabla ── */}
+            <Section style={tableContainer}>
+              <Row style={tableHeaderRow}>
+                <Column style={colProduct}><Text style={tableHeaderText}>Producto</Text></Column>
+                <Column style={colUnitPrice}><Text style={tableHeaderTextRight}>P. Unit.</Text></Column>
+                <Column style={colQty}><Text style={tableHeaderTextCenter}>Cant.</Text></Column>
+                <Column style={colSubtotal}><Text style={tableHeaderTextRight}>Subtotal</Text></Column>
+              </Row>
+
+              {/* ── Filas de productos ── */}
+              {items.map((item, index) => {
+                const unitPrice = parseFloat(item.price);
+                const lineTotal = (unitPrice * item.quantity).toFixed(2);
+                return (
+                  <Row key={index} style={index % 2 === 0 ? tableRowEven : tableRowOdd}>
+                    <Column style={colProduct}><Text style={cellText}>{item.name}</Text></Column>
+                    <Column style={colUnitPrice}><Text style={cellTextRight}>${item.price}</Text></Column>
+                    <Column style={colQty}><Text style={cellTextCenter}>{item.quantity}</Text></Column>
+                    <Column style={colSubtotal}><Text style={cellTextRightBold}>${lineTotal}</Text></Column>
+                  </Row>
+                );
+              })}
+            </Section>
+
+            {/* ── Totales ── */}
+            <Section style={totalsBox}>
+              <Row>
+                <Column style={totalsLabelCol}><Text style={totalsLabel}>Subtotal:</Text></Column>
+                <Column style={totalsValueCol}><Text style={totalsValue}>${subtotal}</Text></Column>
+              </Row>
+              <Row>
+                <Column style={totalsLabelCol}><Text style={totalsLabel}>IVA (15%):</Text></Column>
+                <Column style={totalsValueCol}><Text style={totalsValue}>${taxAmount}</Text></Column>
+              </Row>
+              <Hr style={totalsDivider} />
+              <Row>
+                <Column style={totalsLabelCol}><Text style={totalFinalLabel}>Total Pagado:</Text></Column>
+                <Column style={totalsValueCol}><Text style={totalFinalValue}>${totalAmount}</Text></Column>
+              </Row>
+            </Section>
+
+            <Text style={footerMessage}>
+              En breve prepararemos tu pedido para el envío. Te notificaremos cuando esté en camino. 📦
+            </Text>
           </Section>
 
-          <Hr style={divider} />
-
-          <Section style={totalsSection}>
-            <Row>
-              <Column style={totalsLabelColumn}><Text style={totalsText}>Subtotal:</Text></Column>
-              <Column style={totalsValueColumn}><Text style={totalsText}>${subtotal}</Text></Column>
-            </Row>
-            <Row>
-              <Column style={totalsLabelColumn}><Text style={totalsText}>IVA (15%):</Text></Column>
-              <Column style={totalsValueColumn}><Text style={totalsText}>${taxAmount}</Text></Column>
-            </Row>
-            <Row>
-              <Column style={totalsLabelColumn}><Text style={totalLabelText}>Total Pagado:</Text></Column>
-              <Column style={totalsValueColumn}><Text style={totalValueText}>${totalAmount}</Text></Column>
-            </Row>
+          {/* ── Footer ── */}
+          <Section style={footerSection}>
+            <Text style={footer}>
+              © {new Date().getFullYear()} NeoHW. Todos los derechos reservados.
+            </Text>
           </Section>
-
-          <Text style={footerText}>
-            En breve prepararemos tu pedido para el envío. Te notificaremos cuando esté en camino.
-          </Text>
-
-          <Text style={footer}>
-            © {new Date().getFullYear()} NeoHW. Todos los derechos reservados.
-          </Text>
         </Container>
       </Body>
     </Html>
@@ -113,23 +137,27 @@ export const OrderInvoiceEmail = ({
 
 export default OrderInvoiceEmail;
 
+// ── Estilos ──────────────────────────────────────────────
+
 const main = {
-  backgroundColor: '#0B1120',
+  backgroundColor: '#f4f4f5',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  padding: '20px 0',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '20px 0 48px',
-  width: '600px',
-  backgroundColor: '#1E293B',
-  borderRadius: '8px',
+  width: '100%',
+  maxWidth: '640px',
+  backgroundColor: '#ffffff',
+  borderRadius: '12px',
   overflow: 'hidden',
-  marginTop: '40px',
+  border: '1px solid #e4e4e7',
 };
 
-const logoContainer = {
-  padding: '20px',
+const headerSection = {
+  backgroundColor: '#0f172a',
+  padding: '28px 20px',
   textAlign: 'center' as const,
 };
 
@@ -137,132 +165,204 @@ const logo = {
   margin: '0 auto',
 };
 
+const bodySection = {
+  padding: '32px 28px 20px',
+};
+
 const h1 = {
-  color: '#00f0ff',
-  fontSize: '24px',
-  fontWeight: '600',
-  lineHeight: '40px',
-  margin: '0 0 20px',
+  color: '#0f172a',
+  fontSize: '22px',
+  fontWeight: '700',
+  lineHeight: '30px',
+  margin: '0 0 12px',
   textAlign: 'center' as const,
 };
 
 const h2 = {
-  color: '#f8fafc',
-  fontSize: '18px',
-  fontWeight: '500',
-  margin: '0 40px 10px',
+  color: '#1e293b',
+  fontSize: '16px',
+  fontWeight: '600',
+  margin: '0 0 12px',
 };
 
 const text = {
-  color: '#cbd5e1',
-  fontSize: '15px',
-  lineHeight: '24px',
-  padding: '0 40px',
+  color: '#475569',
+  fontSize: '14px',
+  lineHeight: '22px',
   textAlign: 'center' as const,
+  margin: '0 0 20px',
 };
 
 const orderInfoBox = {
-  background: 'rgba(255, 255, 255, 0.05)',
-  borderRadius: '6px',
-  margin: '0 40px',
-  padding: '16px',
+  backgroundColor: '#f8fafc',
+  borderRadius: '8px',
+  border: '1px solid #e2e8f0',
+  padding: '16px 20px',
+  margin: '0 0 20px',
 };
 
-const orderInfoText = {
-  color: '#e2e8f0',
+const orderInfoLabel = {
+  color: '#94a3b8',
+  fontSize: '11px',
+  fontWeight: '600',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+  margin: '8px 0 2px',
+};
+
+const orderInfoValue = {
+  color: '#1e293b',
   fontSize: '14px',
-  margin: '4px 0',
+  fontWeight: '500',
+  margin: '0 0 4px',
 };
 
 const divider = {
-  borderColor: '#334155',
-  margin: '20px 40px',
+  borderColor: '#e2e8f0',
+  margin: '20px 0',
 };
 
-const tableSection = {
-  padding: '0 40px',
+// ── Tabla de productos ──
+const tableContainer = {
+  width: '100%',
+  margin: '0 0 8px',
 };
 
-const itemRow = {
-  paddingBottom: '10px',
+const tableHeaderRow = {
+  backgroundColor: '#f1f5f9',
+  borderBottom: '2px solid #e2e8f0',
 };
 
-const itemDetailsColumn = {
-  width: '70%',
-};
-
-const itemName = {
-  color: '#e2e8f0',
-  fontSize: '14px',
-  fontWeight: '500',
+const tableHeaderText = {
+  color: '#64748b',
+  fontSize: '11px',
+  fontWeight: '600',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+  padding: '10px 8px',
   margin: '0',
 };
 
-const itemQty = {
-  color: '#94a3b8',
-  fontSize: '12px',
-  margin: '4px 0 0',
-};
-
-const itemPriceColumn = {
-  width: '30%',
+const tableHeaderTextRight = {
+  ...tableHeaderText,
   textAlign: 'right' as const,
 };
 
-const itemPrice = {
-  color: '#00f0ff',
-  fontSize: '14px',
-  fontWeight: '500',
+const tableHeaderTextCenter = {
+  ...tableHeaderText,
+  textAlign: 'center' as const,
+};
+
+const colProduct = { width: '40%' };
+const colUnitPrice = { width: '20%' };
+const colQty = { width: '15%' };
+const colSubtotal = { width: '25%' };
+
+const tableRowEven = {
+  backgroundColor: '#ffffff',
+  borderBottom: '1px solid #f1f5f9',
+};
+
+const tableRowOdd = {
+  backgroundColor: '#fafafa',
+  borderBottom: '1px solid #f1f5f9',
+};
+
+const cellText = {
+  color: '#334155',
+  fontSize: '13px',
+  padding: '10px 8px',
   margin: '0',
+  wordBreak: 'break-word' as const,
 };
 
-const totalsSection = {
-  padding: '0 40px',
-};
-
-const totalsLabelColumn = {
-  width: '70%',
+const cellTextRight = {
+  ...cellText,
   textAlign: 'right' as const,
-  paddingRight: '20px',
+  color: '#475569',
 };
 
-const totalsValueColumn = {
-  width: '30%',
+const cellTextCenter = {
+  ...cellText,
+  textAlign: 'center' as const,
+  color: '#475569',
+};
+
+const cellTextRightBold = {
+  ...cellText,
+  textAlign: 'right' as const,
+  fontWeight: '600',
+  color: '#0f172a',
+};
+
+// ── Totales ──
+const totalsBox = {
+  backgroundColor: '#f8fafc',
+  borderRadius: '8px',
+  border: '1px solid #e2e8f0',
+  padding: '16px 20px',
+  margin: '16px 0 20px',
+};
+
+const totalsLabelCol = {
+  width: '65%',
+  textAlign: 'right' as const,
+  paddingRight: '16px',
+};
+
+const totalsValueCol = {
+  width: '35%',
   textAlign: 'right' as const,
 };
 
-const totalsText = {
-  color: '#94a3b8',
-  fontSize: '14px',
+const totalsLabel = {
+  color: '#64748b',
+  fontSize: '13px',
   margin: '4px 0',
 };
 
-const totalLabelText = {
-  color: '#f8fafc',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  margin: '10px 0 4px',
+const totalsValue = {
+  color: '#334155',
+  fontSize: '13px',
+  margin: '4px 0',
 };
 
-const totalValueText = {
-  color: '#00f0ff',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  margin: '10px 0 4px',
+const totalsDivider = {
+  borderColor: '#cbd5e1',
+  margin: '8px 0',
 };
 
-const footerText = {
-  color: '#cbd5e1',
+const totalFinalLabel = {
+  color: '#0f172a',
+  fontSize: '15px',
+  fontWeight: '700',
+  margin: '4px 0',
+};
+
+const totalFinalValue = {
+  color: '#0891b2',
+  fontSize: '15px',
+  fontWeight: '700',
+  margin: '4px 0',
+};
+
+const footerMessage = {
+  color: '#475569',
   fontSize: '14px',
   lineHeight: '22px',
-  padding: '20px 40px 0',
+  textAlign: 'center' as const,
+  margin: '0',
+};
+
+const footerSection = {
+  backgroundColor: '#f8fafc',
+  borderTop: '1px solid #e2e8f0',
+  padding: '20px',
   textAlign: 'center' as const,
 };
 
 const footer = {
-  color: '#64748b',
+  color: '#94a3b8',
   fontSize: '12px',
-  lineHeight: '24px',
-  marginTop: '48px',
-  textAlign: 'center' as const,
+  margin: '0',
 };
