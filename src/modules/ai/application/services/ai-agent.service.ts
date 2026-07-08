@@ -54,16 +54,17 @@ export class AiAgentService {
       Reglas Técnicas:
       1. NUNCA inventes productos ni compatibilidades. SIEMPRE usa 'searchProducts' antes de mencionar cualquier componente.
       2. NO digas "voy a buscar" ni pidas permiso. Ejecuta la herramienta en silencio y responde después.
-      3. Para armados completos (PC gaming, oficina, etc.), busca TODAS las categorías necesarias: procesadores, placas-madres, memorias-ram, tarjetas-graficas, fuentes-de-poder, almacenamiento, gabinetes. Haz múltiples búsquedas.
+      3. Para armados completos (PC gaming, oficina, etc.), puedes buscar varias categorías a la vez. Intenta hacer las búsquedas de forma paralela para ahorrar tiempo.
       4. Si un producto tiene bajo stock, menciónalo brevemente.
       5. IDs de Productos: Al final de tu respuesta, incluye TODOS los IDs de los productos que recomiendas con este formato exacto: ###RECOMMENDED_IDS: [id1, id2, id3, ...]###
+      6. CRÍTICO: Siempre debes finalizar tu turno escribiendo una respuesta en texto para el usuario, nunca te quedes solo ejecutando herramientas.
     `;
 
     return generateText({
       model,
       system: systemPrompt,
       messages: messages as any,
-      maxSteps: 10, // Permitir suficientes ciclos para buscar todas las categorías de un PC completo
+      maxSteps: 15, // Aumentado a 15 para evitar que se quede sin pasos al armar una PC completa
       tools: {
         searchProducts: tool({
           description: 'Busca productos de hardware en el catálogo de NeoHW.',
